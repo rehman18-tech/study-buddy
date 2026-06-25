@@ -349,7 +349,7 @@ export const AdminDashboard = () => {
               )}
             </div>
             <p className="text-xs text-slate-400 leading-relaxed">
-              Every question asked by students generates an entry in the AIAnswers table. High-confidence answers (>=80%) are verified asynchronously, while low-confidence questions block immediate trust indicators until a teacher verifies them.
+              Every question asked by students generates an entry in the AIAnswers table. High-confidence answers {"(>=80%)"} are verified asynchronously, while low-confidence questions block immediate trust indicators until a teacher verifies them.
             </p>
           </div>
         </div>
