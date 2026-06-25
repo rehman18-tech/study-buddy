@@ -469,6 +469,60 @@ const StructuredMessage = ({ msg, onQuizSubmit }) => {
           padding: '16px 20px', borderRadius: '16px', backgroundColor: 'var(--bg-card)',
           border: '2px solid var(--border-light)', boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
         }}>
+          {msg.agent === 'SYLLABUS' && (
+            msg.isVerified || msg.verificationStatus === 'approved' || msg.verificationStatus === 'edited' ? (
+              <div style={{
+                display: 'flex',
+                alignItems: 'start',
+                gap: '10px',
+                padding: '12px 14px',
+                backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                border: '1.5px solid var(--color-green)',
+                borderRadius: '12px',
+                color: 'var(--color-green-dark)',
+                fontSize: '0.82rem',
+                fontWeight: '600',
+                marginBottom: '14px'
+              }}>
+                <span style={{ fontSize: '1.1rem', marginTop: '-2px' }}>✅</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <span style={{ fontWeight: '800', color: 'var(--color-green-dark)' }}>Verified by Subject Teacher</span>
+                  {msg.verifiedBy && (
+                    <span style={{ display: 'block', fontSize: '0.74rem', color: '#15803d' }}>
+                      Expert: <strong>{msg.verifiedBy.name}</strong> ({msg.verifiedBy.qualification}) • {msg.verifiedBy.institution}
+                    </span>
+                  )}
+                  {msg.teacherComments && (
+                    <span style={{ display: 'block', fontSize: '0.74rem', color: '#166534', fontStyle: 'italic', marginTop: '4px', borderTop: '1px dashed rgba(16, 185, 129, 0.3)', paddingTop: '4px' }}>
+                      💡 Teacher's Note: {msg.teacherComments}
+                    </span>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <div style={{
+                display: 'flex',
+                alignItems: 'start',
+                gap: '10px',
+                padding: '12px 14px',
+                backgroundColor: 'rgba(245, 158, 11, 0.08)',
+                border: '1.5px solid #d97706',
+                borderRadius: '12px',
+                color: '#b45309',
+                fontSize: '0.82rem',
+                fontWeight: '600',
+                marginBottom: '14px'
+              }}>
+                <span style={{ fontSize: '1.1rem', marginTop: '-2px' }}>🤖</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                  <span style={{ fontWeight: '800', color: '#92400e' }}>AI Generated (Not Verified by Teacher)</span>
+                  <span style={{ display: 'block', fontSize: '0.74rem', color: '#b45309' }}>
+                    This answer is currently pending teacher verification. Confidence score: {msg.confidenceScore || 0}%
+                  </span>
+                </div>
+              </div>
+            )
+          )}
           {renderMarkdown(msg.explanation)}
         </div>
       )}
@@ -905,7 +959,16 @@ export const AITeacher = () => {
         
         // Language fields
         defaultLang: defaultLangName,
-        currentLang: defaultLangName
+        currentLang: defaultLangName,
+
+        // Verification metadata
+        verificationStatus: res.verificationStatus || 'pending',
+        confidenceScore: res.confidenceScore || 0,
+        isVerified: res.isVerified || false,
+        verifiedBy: res.verifiedBy || null,
+        verifiedAt: res.verifiedAt || null,
+        sources: res.sources || [],
+        answerId: res.answerId || null
       };
       setMessages((prev) => [...prev, buddyMsg]);
       setMascotExpression(res.expression || 'happy');

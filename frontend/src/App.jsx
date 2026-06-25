@@ -12,6 +12,8 @@ import { AITeacher } from './pages/AITeacher';
 import { ProgressReport } from './pages/ProgressReport';
 import { ParentDashboard } from './pages/ParentDashboard';
 import { SettingsPage } from './pages/SettingsPage';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { TeacherDashboard } from './pages/TeacherDashboard';
 
 // Import Icons
 import { LayoutDashboard, CalendarRange, Brain, Sparkles, LineChart, ShieldCheck, Settings, Flame, Trophy, Lock } from 'lucide-react';
@@ -71,6 +73,14 @@ const InnerApp = () => {
       return <AuthPage />;
     }
     return <LandingPage />;
+  }
+
+  // 2.5 Admin / Teacher routing (Full screen dashboards)
+  if (user.role === 'admin') {
+    return <AdminDashboard />;
+  }
+  if (user.role === 'teacher') {
+    return <TeacherDashboard />;
   }
 
   // 3. Authenticated Sidebar Layout Structure
