@@ -2,6 +2,7 @@ const mongoose = require('mongoose');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const bcrypt = require('bcryptjs');
 
 let isMockMode = false;
 const MOCK_DB_PATH = path.join(__dirname, '..', 'data', 'db.json');
@@ -170,8 +171,39 @@ const AchievementSchema = new mongoose.Schema({
   unlockedAt: { type: Date, default: Date.now }
 });
 
+const TeacherSchema = new mongoose.Schema({
+  name: { type: String, required: true },
+  email: { type: String, required: true, unique: true },
+  password: { type: String, required: true },
+  phone: { type: String, required: true },
+  qualification: { type: String, required: true },
+  specialization: { type: String, required: true },
+  institution: { type: String, required: true },
+  teacherIdProof: { type: String },
+  certificates: { type: [String], default: [] },
+  role: { type: String, enum: ['teacher', 'admin'], default: 'teacher' },
+  status: { type: String, enum: ['pending', 'approved', 'rejected', 'suspended'], default: 'pending' },
+  approvedBy: { type: String },
+  createdAt: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+const AIAnswerSchema = new mongoose.Schema({
+  question: { type: String, required: true },
+  answer: { type: String, required: true },
+  class: { type: Number, required: true },
+  subject: { type: String, required: true },
+  chapter: { type: String, default: 'General' },
+  confidenceScore: { type: Number, default: 0 },
+  verificationStatus: { type: String, enum: ['pending', 'approved', 'rejected', 'edited'], default: 'pending' },
+  verifiedBy: { type: mongoose.Schema.Types.Mixed },
+  teacherComments: { type: String, default: '' },
+  sources: { type: [String], default: [] },
+  createdAt: { type: Date, default: Date.now },
+  verifiedAt: { type: Date }
+}, { timestamps: true });
+
 // Declare Mongoose Models (only compiles if Mongo connects)
-let UserModel, QuizModel, ProgressModel, HomeworkModel, ReminderModel, ClassModel, SubjectModel, ChapterModel, TopicModel, PendingSyllabusModel, StudentProfileModel, ExamModel, StudyPlanModel, QuizResultModel, AchievementModel;
+let UserModel, QuizModel, ProgressModel, HomeworkModel, ReminderModel, ClassModel, SubjectModel, ChapterModel, TopicModel, PendingSyllabusModel, StudentProfileModel, ExamModel, StudyPlanModel, QuizResultModel, AchievementModel, TeacherModel, AIAnswerModel;
 
 // --- Mock File Database Helpers ---
 function readMockDB() {
@@ -194,7 +226,9 @@ function readMockDB() {
     exams: [],
     studyPlans: [],
     quizResults: [],
-    achievements: []
+    achievements: [],
+    teachers: [],
+    aiAnswers: []
   };
 
   if (!fs.existsSync(MOCK_DB_PATH)) {
@@ -544,6 +578,27 @@ async function connectDB() {
     StudyPlanModel = mongoose.model('StudyPlan', StudyPlanSchema);
     QuizResultModel = mongoose.model('QuizResult', QuizResultSchema);
     AchievementModel = mongoose.model('Achievement', AchievementSchema);
+    TeacherModel = mongoose.model('Teacher', TeacherSchema);
+    AIAnswerModel = mongoose.model('AIAnswer', AIAnswerSchema);
+    
+    // Seed default admin in MongoDB if none exists
+    const adminCount = await TeacherModel.countDocuments({ role: 'admin' });
+    if (adminCount === 0) {
+      const hashedPassword = bcrypt.hashSync('adminpassword123', 10);
+      await TeacherModel.create({
+        name: 'System Admin',
+        email: 'admin@studybuddy.com',
+        password: hashedPassword,
+        phone: '0000000000',
+        qualification: 'System Administrator',
+        specialization: 'System Management',
+        institution: 'StudyBuddy Org',
+        role: 'admin',
+        status: 'approved',
+        approvedBy: 'System'
+      });
+      console.log("🌱 Default Admin successfully seeded in MongoDB!");
+    }
     
     // Seed standard quizzes if none exist or if they are the old small ones
     const quizCount = await QuizModel.countDocuments();
@@ -573,6 +628,29 @@ async function connectDB() {
     isMockMode = true;
     const db = readMockDB();
     seedMockQuizzes(db); // Seeds quizzes if db.json is empty
+
+    // Seed default admin in mock DB if none exists
+    if (!db.teachers) db.teachers = [];
+    if (!db.teachers.some(t => t.role === 'admin')) {
+      const hashedPassword = bcrypt.hashSync('adminpassword123', 10);
+      db.teachers.push({
+        _id: crypto.randomUUID(),
+        name: 'System Admin',
+        email: 'admin@studybuddy.com',
+        password: hashedPassword,
+        phone: '0000000000',
+        qualification: 'System Administrator',
+        specialization: 'System Management',
+        institution: 'StudyBuddy Org',
+        role: 'admin',
+        status: 'approved',
+        approvedBy: 'System',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      });
+      writeMockDB(db);
+      console.log("🌱 Default Admin successfully seeded in JSON Database!");
+    }
   }
 }
 
@@ -1485,6 +1563,234 @@ async function unlockAchievement(userId, title, type) {
   }
 }
 
+// --- Teacher Verification System DB Helpers ---
+
+// 1. Teacher APIs
+async function findTeacherByEmail(email) {
+  if (!isMockMode) {
+    return await TeacherModel.findOne({ email: email.toLowerCase() });
+  } else {
+    const db = readMockDB();
+    if (!db.teachers) db.teachers = [];
+    return db.teachers.find(t => t.email.toLowerCase() === email.toLowerCase()) || null;
+  }
+}
+
+async function findTeacherById(id) {
+  if (!isMockMode) {
+    return await TeacherModel.findById(id);
+  } else {
+    const db = readMockDB();
+    if (!db.teachers) db.teachers = [];
+    return db.teachers.find(t => t._id === id) || null;
+  }
+}
+
+async function createTeacher(teacherData) {
+  if (!isMockMode) {
+    const teacher = new TeacherModel(teacherData);
+    return await teacher.save();
+  } else {
+    const db = readMockDB();
+    if (!db.teachers) db.teachers = [];
+    const newTeacher = {
+      _id: crypto.randomUUID(),
+      ...teacherData,
+      role: teacherData.role || 'teacher',
+      status: teacherData.status || 'pending',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    db.teachers.push(newTeacher);
+    writeMockDB(db);
+    return newTeacher;
+  }
+}
+
+async function updateTeacherStatus(id, status, approvedBy = '') {
+  if (!isMockMode) {
+    const update = { status };
+    if (approvedBy) update.approvedBy = approvedBy;
+    return await TeacherModel.findByIdAndUpdate(id, { $set: update }, { new: true });
+  } else {
+    const db = readMockDB();
+    if (!db.teachers) db.teachers = [];
+    const idx = db.teachers.findIndex(t => t._id === id);
+    if (idx !== -1) {
+      db.teachers[idx] = {
+        ...db.teachers[idx],
+        status,
+        approvedBy: approvedBy || db.teachers[idx].approvedBy,
+        updatedAt: new Date().toISOString()
+      };
+      writeMockDB(db);
+      return db.teachers[idx];
+    }
+    return null;
+  }
+}
+
+async function getAllTeachers() {
+  if (!isMockMode) {
+    return await TeacherModel.find({}).sort({ createdAt: -1 });
+  } else {
+    const db = readMockDB();
+    if (!db.teachers) db.teachers = [];
+    return [...db.teachers].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+}
+
+async function deleteTeacher(id) {
+  if (!isMockMode) {
+    return await TeacherModel.findByIdAndDelete(id);
+  } else {
+    const db = readMockDB();
+    if (!db.teachers) db.teachers = [];
+    const idx = db.teachers.findIndex(t => t._id === id);
+    if (idx !== -1) {
+      const deleted = db.teachers.splice(idx, 1);
+      writeMockDB(db);
+      return deleted[0];
+    }
+    return null;
+  }
+}
+
+// 2. AIAnswers APIs
+async function createAIAnswer(data) {
+  if (!isMockMode) {
+    const answer = new AIAnswerModel(data);
+    return await answer.save();
+  } else {
+    const db = readMockDB();
+    if (!db.aiAnswers) db.aiAnswers = [];
+    const newAnswer = {
+      _id: crypto.randomUUID(),
+      ...data,
+      verificationStatus: data.verificationStatus || 'pending',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    db.aiAnswers.push(newAnswer);
+    writeMockDB(db);
+    return newAnswer;
+  }
+}
+
+async function findAIAnswerById(id) {
+  if (!isMockMode) {
+    return await AIAnswerModel.findById(id);
+  } else {
+    const db = readMockDB();
+    if (!db.aiAnswers) db.aiAnswers = [];
+    return db.aiAnswers.find(a => a._id === id) || null;
+  }
+}
+
+async function getAIAnswers(filters = {}) {
+  if (!isMockMode) {
+    const query = {};
+    if (filters.class) query.class = Number(filters.class);
+    if (filters.subject) query.subject = filters.subject;
+    if (filters.chapter) query.chapter = filters.chapter;
+    if (filters.verificationStatus) query.verificationStatus = filters.verificationStatus;
+    if (filters.search) {
+      query.question = new RegExp(filters.search, 'i');
+    }
+    return await AIAnswerModel.find(query).sort({ createdAt: -1 });
+  } else {
+    const db = readMockDB();
+    if (!db.aiAnswers) db.aiAnswers = [];
+    let list = db.aiAnswers;
+    if (filters.class) list = list.filter(a => Number(a.class) === Number(filters.class));
+    if (filters.subject) list = list.filter(a => a.subject === filters.subject);
+    if (filters.chapter) list = list.filter(a => a.chapter === filters.chapter);
+    if (filters.verificationStatus) list = list.filter(a => a.verificationStatus === filters.verificationStatus);
+    if (filters.search) {
+      const searchLower = filters.search.toLowerCase();
+      list = list.filter(a => a.question.toLowerCase().includes(searchLower));
+    }
+    return [...list].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+}
+
+async function updateAIAnswerVerification(id, verificationStatus, extraFields = {}) {
+  if (!isMockMode) {
+    const update = { verificationStatus, ...extraFields };
+    return await AIAnswerModel.findByIdAndUpdate(id, { $set: update }, { new: true });
+  } else {
+    const db = readMockDB();
+    if (!db.aiAnswers) db.aiAnswers = [];
+    const idx = db.aiAnswers.findIndex(a => a._id === id);
+    if (idx !== -1) {
+      db.aiAnswers[idx] = {
+        ...db.aiAnswers[idx],
+        verificationStatus,
+        ...extraFields,
+        updatedAt: new Date().toISOString()
+      };
+      writeMockDB(db);
+      return db.aiAnswers[idx];
+    }
+    return null;
+  }
+}
+
+async function findVerifiedAnswer(questionText, className, subjectName, chapterName) {
+  const cleanQ = questionText.trim().toLowerCase().replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ");
+  if (!isMockMode) {
+    const query = {
+      class: Number(className),
+      subject: subjectName,
+      verificationStatus: { $in: ['approved', 'edited'] }
+    };
+    const answers = await AIAnswerModel.find(query);
+    return answers.find(a => {
+      const cleanA = a.question.trim().toLowerCase().replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ");
+      return cleanA === cleanQ;
+    }) || null;
+  } else {
+    const db = readMockDB();
+    if (!db.aiAnswers) db.aiAnswers = [];
+    const list = db.aiAnswers.filter(a => 
+      Number(a.class) === Number(className) && 
+      a.subject === subjectName && 
+      ['approved', 'edited'].includes(a.verificationStatus)
+    );
+    return list.find(a => {
+      const cleanA = a.question.trim().toLowerCase().replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ");
+      return cleanA === cleanQ;
+    }) || null;
+  }
+}
+
+async function getAIAnswersStats() {
+  if (!isMockMode) {
+    const total = await AIAnswerModel.countDocuments();
+    const approved = await AIAnswerModel.countDocuments({ verificationStatus: { $in: ['approved', 'edited'] } });
+    const pending = await AIAnswerModel.countDocuments({ verificationStatus: 'pending' });
+    const rejected = await AIAnswerModel.countDocuments({ verificationStatus: 'rejected' });
+    const avgConfRes = await AIAnswerModel.aggregate([
+      { $group: { _id: null, avgConf: { $avg: '$confidenceScore' } } }
+    ]);
+    const avgConfidence = avgConfRes.length > 0 ? Math.round(avgConfRes[0].avgConf) : 0;
+    return { total, approved, pending, rejected, avgConfidence };
+  } else {
+    const db = readMockDB();
+    if (!db.aiAnswers) db.aiAnswers = [];
+    const total = db.aiAnswers.length;
+    const approved = db.aiAnswers.filter(a => ['approved', 'edited'].includes(a.verificationStatus)).length;
+    const pending = db.aiAnswers.filter(a => a.verificationStatus === 'pending').length;
+    const rejected = db.aiAnswers.filter(a => a.verificationStatus === 'rejected').length;
+    let avgConfidence = 0;
+    if (total > 0) {
+      const sum = db.aiAnswers.reduce((s, a) => s + (a.confidenceScore || 0), 0);
+      avgConfidence = Math.round(sum / total);
+    }
+    return { total, approved, pending, rejected, avgConfidence };
+  }
+}
+
 module.exports = {
   connectDB,
   isMockMode: () => isMockMode,
@@ -1535,5 +1841,19 @@ module.exports = {
   saveQuizResult,
   getQuizResultsByUser,
   getAchievementsByUser,
-  unlockAchievement
+  unlockAchievement,
+
+  // Teacher Verification System Helpers
+  findTeacherByEmail,
+  findTeacherById,
+  createTeacher,
+  updateTeacherStatus,
+  getAllTeachers,
+  deleteTeacher,
+  createAIAnswer,
+  findAIAnswerById,
+  getAIAnswers,
+  updateAIAnswerVerification,
+  findVerifiedAnswer,
+  getAIAnswersStats
 };

@@ -2,14 +2,31 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
 import { Mascot } from '../components/Mascot';
-import { Mail, Lock, User, GraduationCap, School, ShieldCheck, Phone, Globe, BookOpen } from 'lucide-react';
+import { 
+  Mail, 
+  Lock, 
+  User, 
+  GraduationCap, 
+  School, 
+  ShieldCheck, 
+  Phone, 
+  Globe, 
+  BookOpen, 
+  FileText,
+  FileCheck2,
+  LockKeyhole
+} from 'lucide-react';
 
 export const AuthPage = () => {
-  const { login, register, sendPasswordReset, startDemoSession } = useAuth();
+  const { login, register, loginTeacher, registerTeacher, sendPasswordReset, startDemoSession } = useAuth();
   const { navigate, triggerNotification } = useApp();
-  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register' | 'forgot'
   
-  // Form values
+  // Common states
+  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register' | 'forgot'
+  const [isTeacherPortal, setIsTeacherPortal] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  // Student / Parent Form values
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,7 +39,13 @@ export const AuthPage = () => {
   const [parentContact, setParentContact] = useState('');
   const [parentPin, setParentPin] = useState('1234');
   
-  const [loading, setLoading] = useState(false);
+  // Teacher Form values
+  const [phone, setPhone] = useState('');
+  const [qualification, setQualification] = useState('');
+  const [specialization, setSpecialization] = useState('');
+  const [institution, setInstitution] = useState('');
+  const [teacherIdProof, setTeacherIdProof] = useState(null);
+  const [teacherCertificates, setTeacherCertificates] = useState([]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,35 +56,90 @@ export const AuthPage = () => {
 
     setLoading(true);
     try {
-      if (authMode === 'forgot') {
-        await sendPasswordReset(email);
-        setAuthMode('login');
-      } else if (authMode === 'register') {
-        if (!email || !password || !name) {
-          triggerNotification('⚠️ Please fill out all required fields!', 'red');
-          setLoading(false);
-          return;
+      if (isTeacherPortal) {
+        // Teacher Workflow
+        if (authMode === 'register') {
+          if (!name || !email || !phone || !qualification || !specialization || !institution || !password) {
+            triggerNotification('⚠️ Please fill out all text fields!', 'red');
+            setLoading(false);
+            return;
+          }
+          if (!teacherIdProof) {
+            triggerNotification('⚠️ Government ID proof is required for verification.', 'red');
+            setLoading(false);
+            return;
+          }
+
+          const formData = new FormData();
+          formData.append('name', name);
+          formData.append('email', email);
+          formData.append('phone', phone);
+          formData.append('qualification', qualification);
+          formData.append('specialization', specialization);
+          formData.append('institution', institution);
+          formData.append('password', password);
+          formData.append('teacherIdProof', teacherIdProof);
+          for (let i = 0; i < teacherCertificates.length; i++) {
+            formData.append('certificates', teacherCertificates[i]);
+          }
+
+          await registerTeacher(formData);
+          // Reset fields & switch to login
+          setName('');
+          setPhone('');
+          setQualification('');
+          setSpecialization('');
+          setInstitution('');
+          setPassword('');
+          setTeacherIdProof(null);
+          setTeacherCertificates([]);
+          setAuthMode('login');
+        } else {
+          // Teacher Login
+          await loginTeacher(email, password);
         }
-        await register({
-          name,
-          email,
-          password,
-          role,
-          studentClass: role === 'student' ? Number(studentClass) : undefined,
-          schoolName: role === 'student' ? schoolName : undefined,
-          schoolType: role === 'student' ? schoolType : undefined,
-          board: role === 'student' ? board : undefined,
-          preferredLanguage: role === 'student' ? preferredLanguage : undefined,
-          parentContact: role === 'student' ? parentContact : undefined,
-          parentPin: role === 'student' ? parentPin : undefined
-        });
       } else {
-        await login(email, password);
+        // Student / Parent Workflow
+        if (authMode === 'forgot') {
+          await sendPasswordReset(email);
+          setAuthMode('login');
+        } else if (authMode === 'register') {
+          if (!email || !password || !name) {
+            triggerNotification('⚠️ Please fill out all required fields!', 'red');
+            setLoading(false);
+            return;
+          }
+          await register({
+            name,
+            email,
+            password,
+            role,
+            studentClass: role === 'student' ? Number(studentClass) : undefined,
+            schoolName: role === 'student' ? schoolName : undefined,
+            schoolType: role === 'student' ? schoolType : undefined,
+            board: role === 'student' ? board : undefined,
+            preferredLanguage: role === 'student' ? preferredLanguage : undefined,
+            parentContact: role === 'student' ? parentContact : undefined,
+            parentPin: role === 'student' ? parentPin : undefined
+          });
+        } else {
+          await login(email, password);
+        }
       }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleFileChange = (e, field) => {
+    if (e.target.files) {
+      if (field === 'idProof') {
+        setTeacherIdProof(e.target.files[0]);
+      } else if (field === 'certs') {
+        setTeacherCertificates(Array.from(e.target.files));
+      }
     }
   };
 
@@ -75,22 +153,30 @@ export const AuthPage = () => {
       background: 'linear-gradient(135deg, var(--bg-app) 0%, var(--border-light) 100%)'
     }}>
       <div className="card-buddy" style={{
-        maxWidth: '560px',
+        maxWidth: isTeacherPortal && authMode === 'register' ? '680px' : '560px',
         width: '100%',
         padding: '40px 30px',
         backgroundColor: 'var(--bg-card)',
-        textAlign: 'center'
+        textAlign: 'center',
+        transition: 'max-width 0.3s ease'
       }}>
         {/* Floating Mascot */}
         <div style={{ marginTop: '-70px', marginBottom: '15px' }}>
           <Mascot size={100} expression={authMode === 'register' ? 'thinking' : authMode === 'forgot' ? 'confused' : 'happy'} />
         </div>
 
+        {/* Dynamic Titles */}
         <h2 style={{ fontSize: '2.1rem', color: 'var(--text-main)', marginBottom: '6px' }}>
-          {authMode === 'register' ? 'Join Study Buddy!' : authMode === 'forgot' ? 'Reset Password' : 'Welcome Back!'}
+          {isTeacherPortal 
+            ? (authMode === 'register' ? 'Teacher Onboarding Application' : 'Educator & Admin Portal') 
+            : (authMode === 'register' ? 'Join Study Buddy!' : authMode === 'forgot' ? 'Reset Password' : 'Welcome Back!')
+          }
         </h2>
         <p style={{ color: 'var(--text-muted)', marginBottom: '25px', fontWeight: '600', fontSize: '0.92rem' }}>
-          {authMode === 'register' ? 'Create student profile for Andhra Pradesh State Board & CBSE' : authMode === 'forgot' ? 'Enter your email to receive a password reset link' : 'Sign in to access quizzes, schedules and StudyGuru AI'}
+          {isTeacherPortal
+            ? (authMode === 'register' ? 'Register your teaching credentials for administrative verification.' : 'Sign in to access review lists and verify student answers.')
+            : (authMode === 'register' ? 'Create student profile for Andhra Pradesh State Board & CBSE' : authMode === 'forgot' ? 'Enter your email to receive a password reset link' : 'Sign in to access quizzes, schedules and StudyGuru AI')
+          }
         </p>
 
         {/* Tab Selector (only show if not in forgot password mode) */}
@@ -110,7 +196,7 @@ export const AuthPage = () => {
                 background: authMode === 'login' ? 'var(--bg-card)' : 'transparent',
                 fontFamily: 'var(--font-header)', fontSize: '0.95rem',
                 borderRadius: 'calc(var(--radius-sm) - 4px)', cursor: 'pointer',
-                color: authMode === 'login' ? 'var(--color-green)' : 'var(--text-muted)',
+                color: authMode === 'login' ? (isTeacherPortal ? 'var(--color-purple)' : 'var(--color-green)') : 'var(--text-muted)',
                 fontWeight: '700', transition: 'all 0.2s ease'
               }}
             >
@@ -124,11 +210,11 @@ export const AuthPage = () => {
                 background: authMode === 'register' ? 'var(--bg-card)' : 'transparent',
                 fontFamily: 'var(--font-header)', fontSize: '0.95rem',
                 borderRadius: 'calc(var(--radius-sm) - 4px)', cursor: 'pointer',
-                color: authMode === 'register' ? 'var(--color-green)' : 'var(--text-muted)',
+                color: authMode === 'register' ? (isTeacherPortal ? 'var(--color-purple)' : 'var(--color-green)') : 'var(--text-muted)',
                 fontWeight: '700', transition: 'all 0.2s ease'
               }}
             >
-              Create Account
+              {isTeacherPortal ? 'Apply to Teach' : 'Create Account'}
             </button>
           </div>
         )}
@@ -143,7 +229,7 @@ export const AuthPage = () => {
                 <User size={18} style={{ position: 'absolute', left: '14px', top: '14px', color: 'var(--text-muted)' }} />
                 <input
                   type="text"
-                  placeholder="Enter student name"
+                  placeholder={isTeacherPortal ? "Enter your full name" : "Enter student name"}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   style={{
@@ -162,7 +248,7 @@ export const AuthPage = () => {
               <Mail size={18} style={{ position: 'absolute', left: '14px', top: '14px', color: 'var(--text-muted)' }} />
               <input
                 type="email"
-                placeholder="student@school.com"
+                placeholder={isTeacherPortal ? "teacher@school.com" : "student@school.com"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 style={{
@@ -194,10 +280,123 @@ export const AuthPage = () => {
             </div>
           )}
 
-          {/* Registration AP Student Metadata Fields */}
-          {authMode === 'register' && (
+          {/* TEACHER METADATA ONBOARDING FIELDS */}
+          {isTeacherPortal && authMode === 'register' && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>Contact Phone</label>
+                  <div style={{ position: 'relative' }}>
+                    <Phone size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
+                    <input
+                      type="tel"
+                      placeholder="e.g. +91 9988..."
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      style={{
+                        width: '100%', padding: '12px 12px 12px 34px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
+                        fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
+                      }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>Highest Qualification</label>
+                  <div style={{ position: 'relative' }}>
+                    <GraduationCap size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
+                    <input
+                      type="text"
+                      placeholder="e.g. M.Sc Chemistry, B.Ed"
+                      value={qualification}
+                      onChange={(e) => setQualification(e.target.value)}
+                      style={{
+                        width: '100%', padding: '12px 12px 12px 34px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
+                        fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
+                      }}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>Subject Specialization</label>
+                  <div style={{ position: 'relative' }}>
+                    <BookOpen size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
+                    <input
+                      type="text"
+                      placeholder="e.g. Science / Biology"
+                      value={specialization}
+                      onChange={(e) => setSpecialization(e.target.value)}
+                      style={{
+                        width: '100%', padding: '12px 12px 12px 34px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
+                        fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
+                      }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>School / Institution</label>
+                  <div style={{ position: 'relative' }}>
+                    <School size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
+                    <input
+                      type="text"
+                      placeholder="e.g. AP Model School"
+                      value={institution}
+                      onChange={(e) => setInstitution(e.target.value)}
+                      style={{
+                        width: '100%', padding: '12px 12px 12px 34px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
+                        fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
+                      }}
+                      required
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Uploads Block */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '5px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '5px' }}>
+                    Govt ID Proof (.pdf, .jpg, .png) *
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => handleFileChange(e, 'idProof')}
+                      style={{ fontSize: '0.78rem', width: '100%' }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '5px' }}>
+                    Teaching Certificates (multiple)
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type="file"
+                      multiple
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      onChange={(e) => handleFileChange(e, 'certs')}
+                      style={{ fontSize: '0.78rem', width: '100%' }}
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* STUDENT/PARENT REGISTRATION METADATA FIELDS */}
+          {!isTeacherPortal && authMode === 'register' && (
             <>
-              {/* Role Select */}
               <div>
                 <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>Registering as</label>
                 <select
@@ -343,7 +542,7 @@ export const AuthPage = () => {
           )}
 
           {/* Forgot Password trigger */}
-          {authMode === 'login' && (
+          {authMode === 'login' && !isTeacherPortal && (
             <div style={{ textAlign: 'right', marginTop: '-5px' }}>
               <button
                 type="button"
@@ -360,11 +559,16 @@ export const AuthPage = () => {
 
           <button
             type="submit"
-            className="btn-3d btn-3d-green"
+            className={isTeacherPortal ? "btn-3d btn-3d-purple" : "btn-3d btn-3d-green"}
             style={{ width: '100%', marginTop: '10px', padding: '14px' }}
             disabled={loading}
           >
-            {loading ? 'Processing...' : authMode === 'forgot' ? 'Send Password Reset Email' : authMode === 'register' ? 'Register & Start Studying!' : 'Sign In'}
+            {loading 
+              ? 'Processing...' 
+              : isTeacherPortal 
+                ? (authMode === 'register' ? 'Submit Application Form' : 'Educator Sign In') 
+                : (authMode === 'forgot' ? 'Send Password Reset Email' : authMode === 'register' ? 'Register & Start Studying!' : 'Sign In')
+            }
           </button>
         </form>
 
@@ -383,33 +587,86 @@ export const AuthPage = () => {
           </div>
         )}
 
-        {/* Developer Bypass */}
+        {/* Developer Bypass & Portal Switch */}
         {authMode !== 'forgot' && (
           <div style={{ marginTop: '20px', borderTop: '2px solid var(--border-light)', paddingTop: '15px' }}>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '8px' }}>
-              Testing out the platform as a developer?
-            </p>
-            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
-              <button 
-                onClick={() => startDemoSession('student')} 
-                style={{
-                  background: 'none', border: 'none', color: 'var(--color-green)', fontFamily: 'var(--font-header)',
-                  fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer'
-                }}
-              >
-                Demo Student
-              </button>
-              <span style={{ color: 'var(--text-muted)' }}>|</span>
-              <button 
-                onClick={() => startDemoSession('parent')} 
-                style={{
-                  background: 'none', border: 'none', color: 'var(--color-purple)', fontFamily: 'var(--font-header)',
-                  fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer'
-                }}
-              >
-                Demo Parent
-              </button>
-            </div>
+            {isTeacherPortal ? (
+              /* Teacher Portal View Bypasses */
+              <>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '8px' }}>
+                  Developer shortcuts for verification testing:
+                </p>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '12px' }}>
+                  <button 
+                    onClick={() => startDemoSession('teacher')} 
+                    style={{
+                      background: 'none', border: 'none', color: 'var(--color-purple)', fontFamily: 'var(--font-header)',
+                      fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer'
+                    }}
+                  >
+                    Demo Teacher
+                  </button>
+                  <span style={{ color: 'var(--text-muted)' }}>|</span>
+                  <button 
+                    onClick={() => startDemoSession('admin')} 
+                    style={{
+                      background: 'none', border: 'none', color: 'var(--color-purple-dark)', fontFamily: 'var(--font-header)',
+                      fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer'
+                    }}
+                  >
+                    Demo Admin
+                  </button>
+                </div>
+                <button
+                  onClick={() => { setIsTeacherPortal(false); setAuthMode('login'); }}
+                  style={{
+                    background: 'none', border: 'none', color: 'var(--color-green)', fontFamily: 'var(--font-header)',
+                    fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline'
+                  }}
+                >
+                  ← Go back to Student & Parent Portal
+                </button>
+              </>
+            ) : (
+              /* Student Portal View Bypasses */
+              <>
+                <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginBottom: '8px' }}>
+                  Testing out the platform as a developer?
+                </p>
+                <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '12px' }}>
+                  <button 
+                    onClick={() => startDemoSession('student')} 
+                    style={{
+                      background: 'none', border: 'none', color: 'var(--color-green)', fontFamily: 'var(--font-header)',
+                      fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer'
+                    }}
+                  >
+                    Demo Student
+                  </button>
+                  <span style={{ color: 'var(--text-muted)' }}>|</span>
+                  <button 
+                    onClick={() => startDemoSession('parent')} 
+                    style={{
+                      background: 'none', border: 'none', color: 'var(--color-purple)', fontFamily: 'var(--font-header)',
+                      fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer'
+                    }}
+                  >
+                    Demo Parent
+                  </button>
+                </div>
+                
+                <button
+                  onClick={() => { setIsTeacherPortal(true); setAuthMode('login'); }}
+                  style={{
+                    background: 'none', border: 'none', color: 'var(--color-purple)', fontFamily: 'var(--font-header)',
+                    fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer', textDecoration: 'underline',
+                    display: 'flex', items: 'center', gap: '4px', margin: '0 auto'
+                  }}
+                >
+                  <LockKeyhole size={14} /> Access Teacher & Admin Portal
+                </button>
+              </>
+            )}
           </div>
         )}
 

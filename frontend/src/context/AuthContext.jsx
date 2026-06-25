@@ -51,8 +51,45 @@ export const AuthProvider = ({ children }) => {
         const token = localStorage.getItem('studybuddy_token');
         if (token) {
           try {
-            const data = await api.getMe();
-            setUser(data.user);
+            if (token === 'demo_teacher_token_bypass') {
+              setUser({
+                _id: 'demo_teacher_123',
+                name: 'Dr. Ravi Kumar',
+                email: 'teacher@studybuddy.com',
+                role: 'teacher',
+                status: 'approved',
+                qualification: 'M.Sc Biology, B.Ed',
+                specialization: 'Biology',
+                institution: 'Andhra Pradesh Model School'
+              });
+              navigate('teacher-dashboard');
+            } else if (token === 'demo_admin_token_bypass') {
+              setUser({
+                _id: 'demo_admin_123',
+                name: 'System Admin',
+                email: 'admin@studybuddy.com',
+                role: 'admin',
+                status: 'approved',
+                qualification: 'System Administrator',
+                specialization: 'System Management',
+                institution: 'StudyBuddy Org'
+              });
+              navigate('admin-dashboard');
+            } else {
+              let data;
+              try {
+                data = await api.getMe();
+                setUser(data.user);
+              } catch (studentErr) {
+                data = await api.getTeacherMe();
+                setUser(data.user);
+                if (data.user.role === 'admin') {
+                  navigate('admin-dashboard');
+                } else {
+                  navigate('teacher-dashboard');
+                }
+              }
+            }
           } catch (err) {
             console.error("Local auth session load failed:", err);
             api.logout();
@@ -201,7 +238,78 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const loginTeacher = async (email, password) => {
+    setLoading(true);
+    try {
+      const data = await api.loginTeacher(email, password);
+      setUser(data.user);
+      localStorage.setItem('studybuddy_token', data.token);
+      triggerNotification(`🎉 Welcome back, ${data.user.name}!`);
+      if (data.user.role === 'admin') {
+        navigate('admin-dashboard');
+      } else {
+        navigate('teacher-dashboard');
+      }
+      return data.user;
+    } catch (err) {
+      triggerNotification(err.message || 'Login failed. Please check credentials.', 'red');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const registerTeacher = async (formData) => {
+    setLoading(true);
+    try {
+      const data = await api.registerTeacher(formData);
+      triggerNotification('🌱 Application submitted successfully! An admin will review it.');
+      return data;
+    } catch (err) {
+      triggerNotification(err.message || 'Registration failed.', 'red');
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const startDemoSession = (role = 'student') => {
+    if (role === 'teacher') {
+      const demoTeacher = {
+        _id: 'demo_teacher_123',
+        name: 'Dr. Ravi Kumar',
+        email: 'teacher@studybuddy.com',
+        role: 'teacher',
+        status: 'approved',
+        qualification: 'M.Sc Biology, B.Ed',
+        specialization: 'Biology',
+        institution: 'Andhra Pradesh Model School'
+      };
+      setUser(demoTeacher);
+      localStorage.setItem('studybuddy_token', 'demo_teacher_token_bypass');
+      triggerNotification(`💡 Entering Developer Demo Mode as ${demoTeacher.name}!`);
+      navigate('teacher-dashboard');
+      return;
+    }
+
+    if (role === 'admin') {
+      const demoAdmin = {
+        _id: 'demo_admin_123',
+        name: 'System Admin',
+        email: 'admin@studybuddy.com',
+        role: 'admin',
+        status: 'approved',
+        qualification: 'System Administrator',
+        specialization: 'System Management',
+        institution: 'StudyBuddy Org'
+      };
+      setUser(demoAdmin);
+      localStorage.setItem('studybuddy_token', 'demo_admin_token_bypass');
+      triggerNotification(`💡 Entering Developer Demo Mode as ${demoAdmin.name}!`);
+      navigate('admin-dashboard');
+      return;
+    }
+
     const demoUser = {
       _id: 'demo_user_123',
       name: role === 'student' ? 'Alex Rider' : 'Parent of Alex',
@@ -251,6 +359,8 @@ export const AuthProvider = ({ children }) => {
         loading,
         login,
         register,
+        loginTeacher,
+        registerTeacher,
         sendPasswordReset,
         logout,
         refreshUser,

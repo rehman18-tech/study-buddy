@@ -596,7 +596,30 @@ Ensure the response is valid JSON and contains nothing else.`;
   },
 
   // 2. Syllabus Knowledge Agent (Tutor)
-  async runSyllabus(user, profile, memoryContext, syllabusContext, userMessage, detectedSubject) {
+  async runSyllabus(user, profile, memoryContext, syllabusContext, userMessage, detectedSubject, chapter = 'General', topic = 'General') {
+    const activeSubject = detectedSubject || 'General';
+    const activeChapter = chapter || 'General';
+
+    // 0. Lookup verified answer
+    try {
+      const verifiedAnswer = await db.findVerifiedAnswer(userMessage, profile.classNum, activeSubject, activeChapter);
+      if (verifiedAnswer) {
+        console.log(`🎯 [runSyllabus] Found verified answer for: "${userMessage}"`);
+        return {
+          agent: 'SYLLABUS',
+          text: verifiedAnswer.answer,
+          verificationStatus: verifiedAnswer.verificationStatus,
+          confidenceScore: verifiedAnswer.confidenceScore,
+          isVerified: true,
+          verifiedBy: verifiedAnswer.verifiedBy,
+          verifiedAt: verifiedAnswer.verifiedAt,
+          sources: verifiedAnswer.sources
+        };
+      }
+    } catch (lookupErr) {
+      console.warn("⚠️ [runSyllabus] Verified answer lookup failed:", lookupErr.message);
+    }
+
     // 1. Perform Web Search in the background
     let searchResults = [];
     try {
@@ -641,18 +664,64 @@ Provide your tutoring response in a friendly markdown format.`;
                              tutorText.includes("online AI servers are currently experiencing");
 
     if (isFallbackResponse && searchResults.length > 0) {
-      // LLM is offline, but we have search engine results! Format them like a search engine.
       const searchList = searchResults.map((r, i) => `\n\n🔗 **[${r.title}](${r.url})**\n_${r.snippet}_`).join('');
       tutorText = `Hoot hoot! 🦉 The online AI is currently offline, but I did a quick web search on my learning engine for you! Here is what I found about **"${userMessage}"**:${searchList}\n\nDon't worry, we can keep learning! If you want to practice, type **"test me"** to start an offline quiz! 🚀`;
     } else if (searchResults.length > 0 && !tutorText.includes("Web Sources") && !tutorText.includes("Web Search Results")) {
-      // If we got a local offline matching answer (like Zygote/Photosynthesis), append the search links as supplementary sources
       const linkList = searchResults.map((r, i) => `\n- [${r.title}](${r.url})`).join('');
       tutorText += `\n\n**🔍 Web Search Results:**${linkList}`;
     }
 
+    // 2. Calculate Confidence Score
+    let confidenceScore = 80; // default base score
+    
+    // Rule: Matches syllabus data
+    const hasSyllabus = syllabusContext && !syllabusContext.includes("no custom chapters") && !syllabusContext.includes("Syllabus Context: Currently no");
+    if (hasSyllabus) {
+      confidenceScore += 15;
+    } else {
+      confidenceScore -= 20;
+    }
+
+    // Rule: Long reasoning answers
+    if (tutorText.length > 800) {
+      confidenceScore -= 15;
+    }
+
+    // Rule: External/general knowledge questions (no subject detected or general query)
+    if (!detectedSubject || detectedSubject === 'General') {
+      confidenceScore -= 20;
+    } else {
+      confidenceScore += 10;
+    }
+
+    // Bound confidence score between 0 and 100
+    confidenceScore = Math.max(0, Math.min(100, confidenceScore));
+
+    // 3. Save AI Answer in database
+    let savedAnswer;
+    try {
+      savedAnswer = await db.createAIAnswer({
+        question: userMessage,
+        answer: tutorText,
+        class: profile.classNum,
+        subject: activeSubject,
+        chapter: activeChapter,
+        confidenceScore,
+        verificationStatus: 'pending',
+        sources: searchResults.length > 0 ? searchResults.map(r => r.title) : ["AP State Curriculum Guideline"]
+      });
+    } catch (saveErr) {
+      console.error("⚠️ [AgentOrchestrator] Failed saving AI answer to database:", saveErr.message);
+    }
+
     return {
       agent: 'SYLLABUS',
-      text: tutorText
+      text: tutorText,
+      verificationStatus: 'pending',
+      confidenceScore,
+      isVerified: false,
+      sources: searchResults.length > 0 ? searchResults.map(r => r.title) : [],
+      answerId: savedAnswer ? savedAnswer._id : null
     };
   }
 };
@@ -834,7 +903,7 @@ function generateRuleBasedFallback(intent, profile, subject) {
 }
 
 async function runOrchestrator(user, messageData) {
-  const { message, language } = messageData;
+  const { message, language, subject, chapter, topic } = messageData;
   if (!message) {
     throw new Error("Missing 'message' inside the orchestrator payload.");
   }
@@ -894,15 +963,15 @@ async function runOrchestrator(user, messageData) {
         return await agents.runExam(user, profile, memoryContext, syllabusContext, message);
       case 'SYLLABUS':
       default:
-        return await agents.runSyllabus(user, profile, memoryContext, syllabusContext, message, detectedSubject);
+        return await agents.runSyllabus(user, profile, memoryContext, syllabusContext, message, detectedSubject || subject, chapter, topic);
     }
   } catch (err) {
     console.error(`[AgentOrchestrator] Failed executing ${intent} agent. Attempting syllabus tutor fallback. Error:`, err.message);
     try {
-      return await agents.runSyllabus(user, profile, memoryContext, syllabusContext, message, detectedSubject);
+      return await agents.runSyllabus(user, profile, memoryContext, syllabusContext, message, detectedSubject || subject, chapter, topic);
     } catch (tutorErr) {
       console.error(`[AgentOrchestrator] Safe tutor fallback failed. Generating rule-based offline payload. Error:`, tutorErr.message);
-      return generateRuleBasedFallback(intent, profile, detectedSubject);
+      return generateRuleBasedFallback(intent, profile, detectedSubject || subject);
     }
   }
 }

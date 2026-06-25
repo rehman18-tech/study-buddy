@@ -333,5 +333,87 @@ export const api = {
   // Parent Student Management API
   async getParentStudents() {
     return await request('/parent/students');
+  },
+
+  // Teacher Auth & Onboarding API
+  async registerTeacher(formData) {
+    const token = localStorage.getItem('studybuddy_token');
+    const response = await fetch(`${API_BASE_URL}/teachers/register`, {
+      method: 'POST',
+      headers: token ? { 'Authorization': `Bearer ${token}` } : {},
+      body: formData
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.message || 'Error registering teacher.');
+    }
+    return data;
+  },
+
+  async loginTeacher(email, password) {
+    return await request('/teachers/login', {
+      method: 'POST',
+      body: JSON.stringify({ email, password })
+    });
+  },
+
+  async getTeacherMe() {
+    return await request('/teachers/me');
+  },
+
+  // Admin Dashboard API
+  async getAdminTeachers() {
+    return await request('/admin/teachers');
+  },
+
+  async approveTeacher(id) {
+    return await request(`/admin/teachers/approve/${id}`, {
+      method: 'POST'
+    });
+  },
+
+  async rejectTeacher(id) {
+    return await request(`/admin/teachers/reject/${id}`, {
+      method: 'POST'
+    });
+  },
+
+  async suspendTeacher(id) {
+    return await request(`/admin/teachers/suspend/${id}`, {
+      method: 'POST'
+    });
+  },
+
+  async deleteTeacherApplication(id) {
+    return await request(`/admin/teachers/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async getAdminStats() {
+    return await request('/admin/stats');
+  },
+
+  // Teacher Review API
+  async getPendingAnswers(filters = {}) {
+    const params = new URLSearchParams(filters).toString();
+    return await request(`/teachers-review/answers/pending?${params}`);
+  },
+
+  async getApprovedAnswers(filters = {}) {
+    const params = new URLSearchParams(filters).toString();
+    return await request(`/teachers-review/answers/approved?${params}`);
+  },
+
+  async getRejectedAnswers(filters = {}) {
+    const params = new URLSearchParams(filters).toString();
+    return await request(`/teachers-review/answers/rejected?${params}`);
+  },
+
+  async reviewAnswer(id, reviewData) {
+    return await request(`/teachers-review/answers/review/${id}`, {
+      method: 'POST',
+      body: JSON.stringify(reviewData)
+    });
   }
 };
