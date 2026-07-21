@@ -165,7 +165,11 @@ export const AdminDashboard = ({ adminView = 'dashboard', setAdminView }) => {
   const [addTeacherPassword, setAddTeacherPassword] = useState('');
   const [addTeacherLoading, setAddTeacherLoading] = useState(false);
 
-  const API_SERVER_URL = import.meta.env.VITE_API_URL ? import.meta.env.VITE_API_URL.replace('/api', '') : 'http://localhost:5000';
+  const API_SERVER_URL = import.meta.env.VITE_API_URL 
+    ? import.meta.env.VITE_API_URL.replace('/api', '') 
+    : (typeof window !== 'undefined' && (window.location.hostname !== 'localhost' || window.location.port === '5000')
+        ? `${window.location.protocol}//${window.location.host}`
+        : 'http://localhost:5000');
 
   const [seedingLoading, setSeedingLoading] = useState(false);
 

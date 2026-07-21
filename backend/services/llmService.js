@@ -966,9 +966,8 @@ async function callLLM(systemInstruction, promptText, jsonMode = false, throwOnE
   if (useGemini) {
     const keys = GEMINI_API_KEY.split(',').map(k => k.trim()).filter(k => k);
     const models = [
-      'gemini-2.5-flash',
-      'gemini-2.0-flash',
       'gemini-1.5-flash',
+      'gemini-2.0-flash',
       'gemini-1.5-pro'
     ];
 
