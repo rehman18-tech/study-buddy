@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "StudyBuddy Full-Stack Educational Application",
   "scripts": {
-    "install-all": "npm install --legacy-peer-deps && npm --prefix backend install --legacy-peer-deps && npm --prefix frontend install --legacy-peer-deps",
+    "install-all": "npm install --production=false --legacy-peer-deps && npm --prefix backend install --legacy-peer-deps && npm --prefix frontend install --production=false --legacy-peer-deps",
     "start-backend": "npm --prefix backend run dev",
     "start-frontend": "npm --prefix frontend run dev",
     "dev": "concurrently \"npm run start-backend\" \"npm run start-frontend\""
