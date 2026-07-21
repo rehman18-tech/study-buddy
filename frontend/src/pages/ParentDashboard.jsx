@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { api } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useApp } from '../context/AppContext';
-import { Lock, Unlock, ShieldAlert, Award, Plus, Sparkles, BookOpen, Clock, Heart, CheckCircle2, TrendingUp, AlertTriangle } from 'lucide-react';
+import { Lock, Unlock, ShieldAlert, Award, Plus, Sparkles, BookOpen, Clock, Heart, CheckCircle2, TrendingUp, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 
 export const ParentDashboard = () => {
   const { user, refreshUser, setUser } = useAuth();
@@ -10,6 +10,7 @@ export const ParentDashboard = () => {
 
   const [pinVerified, setPinVerified] = useState(false);
   const [pinInput, setPinInput] = useState('');
+  const [showPin, setShowPin] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
 
   // Parent dashboard tab state
@@ -366,19 +367,39 @@ export const ParentDashboard = () => {
           </p>
 
           <form onSubmit={handleVerifyPin}>
-            <input
-              type="password"
-              maxLength={4}
-              placeholder="••••"
-              value={pinInput}
-              onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
-              style={{
-                width: '150px', padding: '14px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                fontSize: '2rem', fontFamily: 'var(--font-header)', letterSpacing: '8px', textAlign: 'center',
-                outline: 'none', marginBottom: '20px'
-              }}
-              autoFocus
-            />
+            <div style={{ position: 'relative', width: '150px', margin: '0 auto 20px auto' }}>
+              <input
+                type={showPin ? "text" : "password"}
+                maxLength={4}
+                placeholder="••••"
+                value={pinInput}
+                onChange={(e) => setPinInput(e.target.value.replace(/\D/g, ''))}
+                style={{
+                  width: '100%', padding: '14px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
+                  fontSize: '2rem', fontFamily: 'var(--font-header)', letterSpacing: '8px', textAlign: 'center',
+                  outline: 'none', paddingRight: '45px'
+                }}
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => setShowPin(!showPin)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  top: '18px',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: 'var(--text-muted)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  padding: 0
+                }}
+              >
+                {showPin ? <EyeOff size={20} /> : <Eye size={20} />}
+              </button>
+            </div>
             {errorMsg && <p style={{ color: 'var(--color-red)', fontSize: '0.85rem', fontWeight: 'bold', marginBottom: '15px' }}>{errorMsg}</p>}
             
             <button type="submit" className="btn-3d btn-3d-purple" style={{ width: '100%', padding: '12px' }} disabled={pinInput.length < 4}>

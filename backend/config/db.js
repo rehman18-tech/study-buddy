@@ -9,10 +9,15 @@ const MOCK_DB_PATH = path.join(__dirname, '..', 'data', 'db.json');
 
 // --- MongoDB Schemas (For Mongoose Mode) ---
 const UserSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  role: { type: String, enum: ['student', 'parent'], default: 'student' },
+  role: { type: String, enum: ['super_admin', 'admin', 'teacher', 'student', 'parent'], default: 'student' },
+  status: { type: String, enum: ['active', 'approved', 'pending', 'rejected', 'suspended'], default: 'active' },
+  permissions: { type: [String], default: [] },
+  
+  // Student Profile sub-document
   studentProfile: {
     class: { type: Number, default: 6 },
     schoolName: { type: String, default: '' },
@@ -28,6 +33,8 @@ const UserSchema = new mongoose.Schema({
     achievementLevel: { type: Number, default: 1 },
     badges: { type: [String], default: [] }
   },
+  
+  // Parent Profile sub-document
   parentProfile: {
     childEmails: { type: [String], default: [] },
     customQuests: [{
@@ -43,10 +50,35 @@ const UserSchema = new mongoose.Schema({
       costXp: Number,
       unlocked: Boolean
     }]
-  }
+  },
+
+  // Teacher / Admin specific fields (optional in schema to allow student registration)
+  phone: { type: String },
+  country: { type: String },
+  qualification: { type: String },
+  specialization: { type: String },
+  institution: { type: String },
+  teacherIdProof: { type: String },
+  certificates: { type: [String], default: [] },
+  approvedBy: { type: String },
+
+  // Real-Time Notification & Routing fields
+  availabilityStatus: { type: String, enum: ['online', 'offline', 'busy', 'away', 'in_live_session'], default: 'offline' },
+  soundEnabled: { type: Boolean, default: true },
+  pushEnabled: { type: Boolean, default: true },
+  emailEnabled: { type: Boolean, default: true },
+  workingHoursStart: { type: String, default: '09:00' },
+  workingHoursEnd: { type: String, default: '17:00' },
+  dndEnabled: { type: Boolean, default: false },
+  dndStart: { type: String, default: '22:00' },
+  dndEnd: { type: String, default: '07:00' },
+  subjectsTaught: { type: [String], default: [] },
+  classesTaught: { type: [Number], default: [] },
+  fcmToken: { type: String, default: '' }
 }, { timestamps: true });
 
 const QuizSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   class: { type: Number, required: true },
   subject: { type: String, required: true },
   title: { type: String, required: true },
@@ -63,21 +95,25 @@ const QuizSchema = new mongoose.Schema({
 });
 
 const ClassSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   classNum: { type: Number, required: true, unique: true }
 });
 
 const SubjectSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   classNum: { type: Number, required: true },
   name: { type: String, required: true }
 });
 
 const ChapterSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   classNum: { type: Number, required: true },
   subjectName: { type: String, required: true },
   name: { type: String, required: true }
 });
 
 const TopicSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   classNum: { type: Number, required: true },
   subjectName: { type: String, required: true },
   chapterName: { type: String, required: true },
@@ -85,6 +121,7 @@ const TopicSchema = new mongoose.Schema({
 });
 
 const ProgressSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   userId: { type: String, required: true },
   subject: { type: String, required: true },
   quizId: { type: String, required: true },
@@ -94,6 +131,7 @@ const ProgressSchema = new mongoose.Schema({
 });
 
 const HomeworkSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   userId: { type: String, required: true },
   title: { type: String, required: true },
   subject: { type: String, required: true },
@@ -102,12 +140,14 @@ const HomeworkSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const ReminderSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   userId: { type: String, required: true },
   time: { type: String, required: true },
   active: { type: Boolean, default: true }
 }, { timestamps: true });
 
 const PendingSyllabusSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   classNum: { type: Number },
   subjectName: { type: String },
   fileName: { type: String, required: true },
@@ -121,6 +161,7 @@ const PendingSyllabusSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const StudentProfileSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   userId: { type: String, required: true, unique: true },
   name: { type: String, required: true },
   classNum: { type: Number, default: 6 },
@@ -138,6 +179,7 @@ const StudentProfileSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const ExamSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   userId: { type: String, required: true },
   subject: { type: String, required: true },
   title: { type: String, required: true },
@@ -146,6 +188,7 @@ const ExamSchema = new mongoose.Schema({
 }, { timestamps: true });
 
 const StudyPlanSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   userId: { type: String, required: true },
   planType: { type: String, enum: ['daily', 'weekly', 'monthly'], default: 'daily' },
   planData: { type: mongoose.Schema.Types.Mixed, required: true },
@@ -153,6 +196,7 @@ const StudyPlanSchema = new mongoose.Schema({
 });
 
 const QuizResultSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   userId: { type: String, required: true },
   quizId: { type: String, required: true },
   subject: { type: String, required: true },
@@ -165,6 +209,7 @@ const QuizResultSchema = new mongoose.Schema({
 });
 
 const AchievementSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   userId: { type: String, required: true },
   title: { type: String, required: true },
   type: { type: String, required: true },
@@ -172,22 +217,25 @@ const AchievementSchema = new mongoose.Schema({
 });
 
 const TeacherSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   phone: { type: String, required: true },
+  country: { type: String, required: true },
   qualification: { type: String, required: true },
   specialization: { type: String, required: true },
   institution: { type: String, required: true },
   teacherIdProof: { type: String },
   certificates: { type: [String], default: [] },
-  role: { type: String, enum: ['teacher', 'admin'], default: 'teacher' },
+  role: { type: String, enum: ['teacher', 'admin', 'super_admin'], default: 'teacher' },
   status: { type: String, enum: ['pending', 'approved', 'rejected', 'suspended'], default: 'pending' },
   approvedBy: { type: String },
   createdAt: { type: Date, default: Date.now }
 }, { timestamps: true });
 
 const AIAnswerSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
   question: { type: String, required: true },
   answer: { type: String, required: true },
   class: { type: Number, required: true },
@@ -197,13 +245,129 @@ const AIAnswerSchema = new mongoose.Schema({
   verificationStatus: { type: String, enum: ['pending', 'approved', 'rejected', 'edited'], default: 'pending' },
   verifiedBy: { type: mongoose.Schema.Types.Mixed },
   teacherComments: { type: String, default: '' },
-  sources: { type: [String], default: [] },
+  sources: { type: [mongoose.Schema.Types.Mixed], default: [] },
+  isSyllabusRelated: { type: Boolean, default: true },
+  reliabilityScore: { type: Number, default: null },
+  reliabilitySummary: { type: mongoose.Schema.Types.Mixed, default: null },
+  learningCompanion: { type: mongoose.Schema.Types.Mixed, default: null },
+  practiceQuestions: { type: mongoose.Schema.Types.Mixed, default: null },
+  miniQuiz: { type: mongoose.Schema.Types.Mixed, default: null },
   createdAt: { type: Date, default: Date.now },
   verifiedAt: { type: Date }
 }, { timestamps: true });
 
+const StudentMemorySchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
+  userId: { type: String, required: true, unique: true },
+  weakChapters: { type: [String], default: [] },
+  strongChapters: { type: [String], default: [] },
+  previousMistakes: { type: [mongoose.Schema.Types.Mixed], default: [] },
+  completedChapters: { type: [String], default: [] },
+  quizHistory: { type: [mongoose.Schema.Types.Mixed], default: [] },
+  revisionHistory: { type: [mongoose.Schema.Types.Mixed], default: [] },
+  learningSpeed: { type: String, enum: ['Slow', 'Average', 'Fast'], default: 'Average' }
+}, { timestamps: true });
+
+const AdminProfileSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
+  userId: { type: String, required: true, unique: true },
+  assignedBy: { type: String, required: true },
+  permissionSet: { type: [String], default: [] },
+  department: { type: String, default: 'General' },
+}, { timestamps: true });
+
+const AuditLogSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
+  action: { type: String, required: true },
+  performedBy: { type: String, required: true }, // Email or ID of user
+  targetUser: { type: String }, // Email or ID of target user
+  metadata: { type: mongoose.Schema.Types.Mixed, default: {} }
+}, { timestamps: true });
+
+const AnnouncementSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
+  title: { type: String, required: true },
+  content: { type: String, required: true },
+  createdBy: { type: String, required: true },
+}, { timestamps: true });
+
+const ReportSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
+  type: { type: String, required: true }, // 'content' or 'complaint' or 'other'
+  content: { type: String, required: true },
+  reportedBy: { type: String, required: true },
+  targetItem: { type: String }, // e.g. answerId or studentId
+  status: { type: String, enum: ['pending', 'resolved', 'ignored'], default: 'pending' },
+}, { timestamps: true });
+
+const TextbookContentSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
+  classNum: { type: Number, required: true },
+  subjectName: { type: String, required: true },
+  chapterName: { type: String, required: true },
+  topicName: { type: String, default: 'General' },
+  content: { type: String, required: true },
+  sourceFile: { type: String, default: 'AP SCERT Curriculum Text' },
+  pageNumber: { type: Number }
+}, { timestamps: true });
+
+const DoubtSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
+  studentId: { type: String, required: true },
+  studentName: { type: String, required: true },
+  classNum: { type: Number, required: true },
+  subject: { type: String, required: true },
+  question: { type: String, required: true },
+  aiAnswer: { type: String, required: true },
+  teacherAnswer: { type: String, default: '' },
+  status: { type: String, enum: ['pending', 'resolved'], default: 'pending' },
+  resolvedBy: { type: mongoose.Schema.Types.Mixed }, // { name, qualification, institution }
+  resolvedAt: { type: Date }
+}, { timestamps: true });
+
+const SupportTicketSchema = new mongoose.Schema({
+  _id: { type: String, required: true },
+  studentId: { type: String, required: true },
+  studentName: { type: String, required: true },
+  classNum: { type: Number, required: true },
+  subject: { type: String, required: true },
+  question: { type: String, required: true },
+  aiAnswer: { type: String, required: true },
+  supportType: { type: String, enum: ['text', 'whiteboard'], required: true },
+  status: { type: String, enum: ['pending', 'assigned', 'completed'], default: 'pending' },
+  assignedTeacher: { type: String, default: null },
+  assignedTeacherName: { type: String, default: null },
+  teacherAnswer: { type: String, default: '' },
+  whiteboardImage: { type: String, default: '' },
+  createdAt: { type: Date, default: Date.now },
+  assignedAt: { type: Date, default: null },
+  resolvedAt: { type: Date, default: null }
+}, { timestamps: true });
+
+const NotificationSchema = new mongoose.Schema({
+  _id: { type: String, default: () => crypto.randomUUID() },
+  recipientId: { type: String, required: true },
+  title: { type: String, required: true },
+  body: { type: String, required: true },
+  type: { type: String, enum: ['doubt', 'ticket', 'general'], default: 'doubt' },
+  status: { type: String, enum: ['new', 'accepted', 'missed', 'declined', 'completed'], default: 'new' },
+  read: { type: Boolean, default: false },
+  metadata: {
+    studentId: String,
+    studentName: String,
+    classNum: Number,
+    subject: String,
+    chapter: String,
+    topic: String,
+    questionPreview: String,
+    timeRaised: Date,
+    doubtId: String,
+    ticketId: String
+  }
+}, { timestamps: true });
+
 // Declare Mongoose Models (only compiles if Mongo connects)
-let UserModel, QuizModel, ProgressModel, HomeworkModel, ReminderModel, ClassModel, SubjectModel, ChapterModel, TopicModel, PendingSyllabusModel, StudentProfileModel, ExamModel, StudyPlanModel, QuizResultModel, AchievementModel, TeacherModel, AIAnswerModel;
+let UserModel, QuizModel, ProgressModel, HomeworkModel, ReminderModel, ClassModel, SubjectModel, ChapterModel, TopicModel, PendingSyllabusModel, StudentProfileModel, ExamModel, StudyPlanModel, QuizResultModel, AchievementModel, TeacherModel, AIAnswerModel, AdminProfileModel, AuditLogModel, AnnouncementModel, ReportModel, TextbookContentModel, DoubtModel, SupportTicketModel, StudentMemoryModel, NotificationModel;
 
 // --- Mock File Database Helpers ---
 function readMockDB() {
@@ -228,7 +392,8 @@ function readMockDB() {
     quizResults: [],
     achievements: [],
     teachers: [],
-    aiAnswers: []
+    aiAnswers: [],
+    supportTickets: []
   };
 
   if (!fs.existsSync(MOCK_DB_PATH)) {
@@ -520,6 +685,32 @@ function getQuestionsForClass(cl, subject) {
         { type: 'mcq', question: prefix + "Which treaty officially ended World War I?", options: ["Treaty of Paris", "Treaty of Versailles", "Treaty of Geneva", "Treaty of London"], correctAnswerIndex: 1, explanation: "The Treaty of Versailles, signed in 1919, officially ended the state of war between Germany and the Allied Powers." }
       ];
     }
+  } else if (subject === 'Hindi') {
+    return [
+      { type: 'mcq', question: prefix + "हिंदी वर्णमाला में कितने स्वर होते हैं?", options: ["11", "13", "33", "52"], correctAnswerIndex: 0, explanation: "हिंदी वर्णमाला में मूल रूप से 11 स्वर होते हैं।" },
+      { type: 'mcq', question: prefix + "निम्नलिखित में से संज्ञा शब्द कौन सा है?", options: ["सुंदर", "लिखना", "दिल्ली", "धीरे-धीरे"], correctAnswerIndex: 2, explanation: "दिल्ली एक व्यक्तिवाचक संज्ञा है।" },
+      { type: 'mcq', question: prefix + "सूर्योदय का संधि विच्छेद क्या होगा?", options: ["सूर्य + उदय", "सूर्य + दय", "सूर्यो + उदय", "सूर + उदय"], correctAnswerIndex: 0, explanation: "सूर्य + उदय मिलकर सूर्योदय बनता है (गुण संधि)।" },
+      { type: 'mcq', question: prefix + "अग्नि का पर्यायवाची शब्द क्या है?", options: ["जल", "पवन", "अनल", "गगन"], correctAnswerIndex: 2, explanation: "अग्नि का पर्यायवाची अनल है।" },
+      { type: 'mcq', question: prefix + "सूरदास ने मुख्य रूप से किस भाषा में रचनाएँ की हैं?", options: ["अवधी", "खड़ी बोली", "ब्रजभाषा", "मैथिली"], correctAnswerIndex: 2, explanation: "सूरदास की अधिकांश रचनाएँ ब्रजभाषा में हैं।" },
+      { type: 'mcq', question: prefix + "काल के कितने भेद होते हैं?", options: ["दो", "तीन", "चार", "पांच"], correctAnswerIndex: 1, explanation: "काल के तीन भेद होते हैं: भूतकाल, वर्तमानकाल और भविष्यकाल।" },
+      { type: 'mcq', question: prefix + "गंगा भारत की पवित्र नदी है - इसमें 'गंगा' कौन सी संज्ञा है?", options: ["जातिवाचक", "भाववाचक", "समूहवाचक", "व्यक्तिवाचक"], correctAnswerIndex: 3, explanation: "गंगा एक विशेष नदी का नाम है, इसलिए यह व्यक्तिवाचक संज्ञा है।" },
+      { type: 'mcq', question: prefix + "निम्नलिखित में से अशुद्ध शब्द कौन सा है?", options: ["कवि", "कवयित्री", "उज्ज्वल", "कविइत्री"], correctAnswerIndex: 3, explanation: "कविइत्री अशुद्ध रूप है, शुद्ध रूप कवयित्री है।" },
+      { type: 'mcq', question: prefix + "जो सब कुछ जानता हो, उसे क्या कहते हैं?", options: ["अल्पज्ञ", "सर्वज्ञ", "विद्वान", "ज्ञानी"], correctAnswerIndex: 1, explanation: "सब कुछ जानने वाले को सर्वज्ञ कहा जाता है।" },
+      { type: 'mcq', question: prefix + "आँखों का तारा होना मुहावरे का क्या अर्थ है?", options: ["बहुत प्यारा होना", "दूर होना", "अंधा होना", "कम दिखना"], correctAnswerIndex: 0, explanation: "आँखों का तारा होने का अर्थ है अत्यधिक प्रिय या बहुत प्यारा होना।" }
+    ];
+  } else if (subject === 'Telugu') {
+    return [
+      { type: 'mcq', question: prefix + "తెలుగు భాషలో మొత్తం ఎన్ని అచ్చులు ఉన్నాయి?", options: ["12", "16", "36", "56"], correctAnswerIndex: 1, explanation: "తెలుగు వర్ణమాలలో 16 అచ్చులు ఉన్నాయి." },
+      { type: 'mcq', question: prefix + "క్రింది వాటిలో నామవాచకం (Noun) ఏది?", options: ["రాముడు", "వెళ్ళాడు", "అక్కడ", "అందమైన"], correctAnswerIndex: 0, explanation: "రాముడు అనేది ఒక వ్యక్తి పేరు, కాబట్టి ఇది నామవాచకం." },
+      { type: 'mcq', question: prefix + "సూర్యోదయం ఏ సంధి?", options: ["సవర్ణదీర్ఘ సంధి", "గుణ సంధి", "యణాదేశ సంధి", "వృద్ధి సంధి"], correctAnswerIndex: 1, explanation: "సూర్య + ఉదయం = సూర్యోదయం (గుణ సంధి)." },
+      { type: 'mcq', question: prefix + "భానుడు అంటే అర్థం ఏమిటి?", options: ["చంద్రుడు", "సూర్యుడు", "నక్షత్రం", "ఆకాశం"], correctAnswerIndex: 1, explanation: "భానుడు అనగా సూర్యుడు." },
+      { type: 'mcq', question: prefix + "తెలుగు వర్ణమాలలో హల్లులు ఎన్ని?", options: ["16", "37", "56", "21"], correctAnswerIndex: 1, explanation: "తెలుగు వర్ణమాలలో హల్లులు 37 ఉన్నాయి." },
+      { type: 'mcq', question: prefix + "క్రియా పదం (Verb) ఏది?", options: ["అతడు", "చదివాడు", "రాము", "పెద్ద"], correctAnswerIndex: 1, explanation: "చదివాడు అనేది ఒక పనిని సూచిస్తుంది, కాబట్టి ఇది క్రియా పదం." },
+      { type: 'mcq', question: prefix + "తెలుగులో విభక్తులు ఎన్ని రకాలు?", options: ["5", "6", "7", "8"], correctAnswerIndex: 3, explanation: "తెలుగులో ప్రథమా విభక్తి నుండి సంబోధనా ప్రథమా విభక్తి వరకు మొత్తం 8 విభక్తులు ఉన్నాయి." },
+      { type: 'mcq', question: prefix + "అమ్మకు సమానమైన దైవం లేదు - ఇందులో అమ్మ ఏ లింగం?", options: ["పుంలింగం", "స్త్రీలింగం", "నపుంసకలింగం", "మహద్వాచకం"], correctAnswerIndex: 1, explanation: "అమ్మ అనేది స్త్రీలింగ పదం." },
+      { type: 'mcq', question: prefix + "రామాయణం కావ్యాన్ని రాసిన కవి ఎవరు?", options: ["వ్యాసుడు", "వాల్మీకి", "కాళిదాసు", "నన్నయ"], correctAnswerIndex: 1, explanation: "రామాయణాన్ని సంస్కృతంలో వాల్మీకి మహర్షి రచించారు." },
+      { type: 'mcq', question: prefix + "తెలుగు తిథులలో మొదటిది ఏది?", options: ["పాడ్యమి", "తదియ", "విదియ", "చవితి"], correctAnswerIndex: 0, explanation: "తెలుగు తిథులలో మొదటి తిథి పాడ్యమి." }
+    ];
   }
 
   return [];
@@ -527,11 +718,11 @@ function getQuestionsForClass(cl, subject) {
 
 // Seed helper for mock database to ensure user has pre-built quizzes
 function seedMockQuizzes(db) {
-  const needsReseed = db.quizzes.length === 0 || db.quizzes.some(q => q.questions.length <= 8);
+  const needsReseed = db.quizzes.length === 0 || db.quizzes.some(q => q.questions.length <= 8) || !db.quizzes.some(q => q.subject === 'Hindi');
   if (!needsReseed) return;
 
   db.quizzes = [];
-  const subjects = ['Math', 'Science', 'English', 'Social Studies'];
+  const subjects = ['Math', 'Science', 'English', 'Social Studies', 'Hindi', 'Telugu'];
 
   // Seed quizzes for all classes 6-10
   for (let cl = 6; cl <= 10; cl++) {
@@ -580,32 +771,84 @@ async function connectDB() {
     AchievementModel = mongoose.model('Achievement', AchievementSchema);
     TeacherModel = mongoose.model('Teacher', TeacherSchema);
     AIAnswerModel = mongoose.model('AIAnswer', AIAnswerSchema);
+    AdminProfileModel = mongoose.model('AdminProfile', AdminProfileSchema);
+    AuditLogModel = mongoose.model('AuditLog', AuditLogSchema);
+    AnnouncementModel = mongoose.model('Announcement', AnnouncementSchema);
+    ReportModel = mongoose.model('Report', ReportSchema);
+    TextbookContentModel = mongoose.model('TextbookContent', TextbookContentSchema);
+    DoubtModel = mongoose.model('Doubt', DoubtSchema);
+    SupportTicketModel = mongoose.model('SupportTicket', SupportTicketSchema);
+    StudentMemoryModel = mongoose.model('StudentMemory', StudentMemorySchema);
+    NotificationModel = mongoose.model('Notification', NotificationSchema);
     
+    // Migrate pre-existing teachers in MongoDB to UserModel
+    try {
+      const teachersInDb = await mongoose.connection.db.collection('teachers').find({}).toArray();
+      for (const t of teachersInDb) {
+        const userExists = await UserModel.findOne({ email: t.email.toLowerCase() });
+        if (!userExists) {
+          await UserModel.create({
+            _id: t._id,
+            name: t.name,
+            email: t.email.toLowerCase(),
+            password: t.password,
+            phone: t.phone,
+            country: t.country,
+            qualification: t.qualification,
+            specialization: t.specialization,
+            institution: t.institution,
+            teacherIdProof: t.teacherIdProof,
+            certificates: t.certificates,
+            role: t.role || 'teacher',
+            status: t.status || 'pending',
+            approvedBy: t.approvedBy,
+            createdAt: t.createdAt,
+            updatedAt: t.updatedAt
+          });
+        }
+      }
+      console.log("🌱 Unified teacher database migration complete in MongoDB!");
+    } catch (migErr) {
+      console.log("⚠️ Teacher database migration warning:", migErr.message);
+    }
+
     // Seed default admin in MongoDB if none exists
-    const adminCount = await TeacherModel.countDocuments({ role: 'admin' });
-    if (adminCount === 0) {
-      const hashedPassword = bcrypt.hashSync('adminpassword123', 10);
-      await TeacherModel.create({
+    const adminExists = await UserModel.findOne({ email: 'mdibadurrehman1865@gmail.com' });
+    const hashedAdminPassword = bcrypt.hashSync('rehman', 10);
+    if (!adminExists) {
+      await UserModel.create({
         name: 'System Admin',
-        email: 'admin@studybuddy.com',
-        password: hashedPassword,
-        phone: '0000000000',
+        email: 'mdibadurrehman1865@gmail.com',
+        password: hashedAdminPassword,
+        phone: '+919988776655',
+        country: 'India',
         qualification: 'System Administrator',
         specialization: 'System Management',
         institution: 'StudyBuddy Org',
-        role: 'admin',
+        role: 'super_admin',
         status: 'approved',
-        approvedBy: 'System'
+        approvedBy: 'System',
+        permissions: ['manage_users', 'manage_admins', 'manage_teachers', 'verify_teachers', 'manage_content', 'manage_syllabus', 'manage_settings', 'view_analytics', 'suspend_accounts', 'access_security_logs']
       });
-      console.log("🌱 Default Admin successfully seeded in MongoDB!");
+      console.log("🌱 Default Admin (super_admin) successfully seeded in MongoDB unified Users!");
+    } else {
+      adminExists.password = hashedAdminPassword;
+      adminExists.role = 'super_admin';
+      adminExists.status = 'approved';
+      adminExists.permissions = ['manage_users', 'manage_admins', 'manage_teachers', 'verify_teachers', 'manage_content', 'manage_syllabus', 'manage_settings', 'view_analytics', 'suspend_accounts', 'access_security_logs'];
+      await adminExists.save();
+      console.log("🌱 Default Admin successfully updated in MongoDB unified Users!");
     }
     
-    // Seed standard quizzes if none exist or if they are the old small ones
     const quizCount = await QuizModel.countDocuments();
     let needsReseed = quizCount === 0;
     if (quizCount > 0) {
       const sampleQuiz = await QuizModel.findOne({});
       if (sampleQuiz && sampleQuiz.questions.length <= 8) {
+        needsReseed = true;
+      }
+      const hasHindi = await QuizModel.findOne({ subject: 'Hindi' });
+      if (!hasHindi) {
         needsReseed = true;
       }
     }
@@ -623,33 +866,153 @@ async function connectDB() {
       await QuizModel.insertMany(formattedQuizzes);
       console.log("🌱 MongoDB quizzes seeded!");
     }
+
+    // Auto-seed sample textbook content if empty (Layer 1 testing)
+    const contentCount = await TextbookContentModel.countDocuments();
+    if (contentCount === 0) {
+      try {
+        console.log("🌱 Seeding sample textbook content for Layer 1 verification...");
+        await TextbookContentModel.create({
+          classNum: 10,
+          subjectName: 'Science',
+          chapterName: 'Acids, Bases and Salts',
+          topicName: 'Chemical Properties of Acids and Bases',
+          content: 'Acids react with metals to produce hydrogen gas and a corresponding salt. For example, when zinc granules react with dilute sulphuric acid, zinc sulphate is formed along with the evolution of hydrogen gas: Zn + H2SO4 -> ZnSO4 + H2. Bases also react with certain active metals like zinc to form salt and hydrogen gas, such as the reaction of sodium hydroxide with zinc producing sodium zincate (Na2ZnO2) and hydrogen gas.',
+          sourceFile: 'Class 10 Science Chapter 2.pdf',
+          pageNumber: 18
+        });
+        await TextbookContentModel.create({
+          classNum: 10,
+          subjectName: 'Science',
+          chapterName: 'Acids, Bases and Salts',
+          topicName: 'Chemical Properties of Acids and Bases',
+          content: 'Acids react with metal carbonates and metal hydrogencarbonates to yield carbon dioxide gas, water, and a salt. For example, sodium carbonate reacts with dilute hydrochloric acid to produce sodium chloride, water, and carbon dioxide: Na2CO3 + 2HCl -> 2NaCl + H2O + CO2. Passing carbon dioxide gas through lime water turns it milky due to the formation of calcium carbonate precipitate.',
+          sourceFile: 'Class 10 Science Chapter 2.pdf',
+          pageNumber: 20
+        });
+        console.log("🌱 Sample textbook content seeded successfully!");
+      } catch (seedErr) {
+        console.log("⚠️ Failed to seed sample textbook content:", seedErr.message);
+      }
+    }
+
+    // Auto-seed syllabus on startup if database has 0 chapters (highly useful on fresh deployment)
+    const syllabusCount = await ChapterModel.countDocuments();
+    if (syllabusCount === 0) {
+      try {
+        const syllabusPath = path.join(__dirname, 'full_syllabus.json');
+        if (fs.existsSync(syllabusPath)) {
+          const rawSyllabus = fs.readFileSync(syllabusPath, 'utf8');
+          const syllabusArray = JSON.parse(rawSyllabus);
+          await bulkInsertSyllabus(syllabusArray);
+          console.log("🌱 Database was empty of syllabus. Automatically seeded Class 6-10 syllabus!");
+        }
+      } catch (seedErr) {
+        console.log("⚠️ Auto-seed syllabus failed:", seedErr.message);
+      }
+    }
   } catch (err) {
+    console.error("connectDB error:", err);
     console.log('⚠️ MongoDB connection failed. Falling back to local file-based JSON DB.');
     isMockMode = true;
     const db = readMockDB();
     seedMockQuizzes(db); // Seeds quizzes if db.json is empty
 
-    // Seed default admin in mock DB if none exists
-    if (!db.teachers) db.teachers = [];
-    if (!db.teachers.some(t => t.role === 'admin')) {
-      const hashedPassword = bcrypt.hashSync('adminpassword123', 10);
-      db.teachers.push({
+    // Migrate teachers to users in mock DB
+    if (db.teachers && db.teachers.length > 0) {
+      if (!db.users) db.users = [];
+      db.teachers.forEach(t => {
+        const userExists = db.users.find(u => u.email.toLowerCase() === t.email.toLowerCase());
+        if (!userExists) {
+          db.users.push({
+            ...t,
+            role: t.role || 'teacher',
+            status: t.status || 'pending'
+          });
+        }
+      });
+      writeMockDB(db);
+    }
+
+    // Seed default admin in mock DB unified Users
+    if (!db.users) db.users = [];
+    const existingAdminIdx = db.users.findIndex(u => u.email === 'mdibadurrehman1865@gmail.com');
+    const hashedMockAdminPassword = bcrypt.hashSync('rehman', 10);
+    if (existingAdminIdx === -1) {
+      db.users.push({
         _id: crypto.randomUUID(),
         name: 'System Admin',
-        email: 'admin@studybuddy.com',
-        password: hashedPassword,
-        phone: '0000000000',
+        email: 'mdibadurrehman1865@gmail.com',
+        password: hashedMockAdminPassword,
+        phone: '+919988776655',
+        country: 'India',
         qualification: 'System Administrator',
         specialization: 'System Management',
         institution: 'StudyBuddy Org',
-        role: 'admin',
+        role: 'super_admin',
         status: 'approved',
         approvedBy: 'System',
+        permissions: ['manage_users', 'manage_admins', 'manage_teachers', 'verify_teachers', 'manage_content', 'manage_syllabus', 'manage_settings', 'view_analytics', 'suspend_accounts', 'access_security_logs'],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       });
       writeMockDB(db);
-      console.log("🌱 Default Admin successfully seeded in JSON Database!");
+      console.log("🌱 Default Admin (super_admin) successfully seeded in JSON Database Users!");
+    } else {
+      db.users[existingAdminIdx].password = hashedMockAdminPassword;
+      db.users[existingAdminIdx].role = 'super_admin';
+      db.users[existingAdminIdx].status = 'approved';
+      db.users[existingAdminIdx].permissions = ['manage_users', 'manage_admins', 'manage_teachers', 'verify_teachers', 'manage_content', 'manage_syllabus', 'manage_settings', 'view_analytics', 'suspend_accounts', 'access_security_logs'];
+      writeMockDB(db);
+      console.log("🌱 Default Admin successfully updated in JSON Database Users!");
+    }
+
+    // Auto-seed mock textbook content if empty
+    if (!db.textbookContents || db.textbookContents.length === 0) {
+      db.textbookContents = [
+        {
+          _id: crypto.randomUUID(),
+          classNum: 10,
+          subjectName: 'Science',
+          chapterName: 'Acids, Bases and Salts',
+          topicName: 'Chemical Properties of Acids and Bases',
+          content: 'Acids react with metals to produce hydrogen gas and a corresponding salt. For example, when zinc granules react with dilute sulphuric acid, zinc sulphate is formed along with the evolution of hydrogen gas: Zn + H2SO4 -> ZnSO4 + H2. Bases also react with certain active metals like zinc to form salt and hydrogen gas, such as the reaction of sodium hydroxide with zinc producing sodium zincate (Na2ZnO2) and hydrogen gas.',
+          sourceFile: 'Class 10 Science Chapter 2.pdf',
+          pageNumber: 18,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        },
+        {
+          _id: crypto.randomUUID(),
+          classNum: 10,
+          subjectName: 'Science',
+          chapterName: 'Acids, Bases and Salts',
+          topicName: 'Chemical Properties of Acids and Bases',
+          content: 'Acids react with metal carbonates and metal hydrogencarbonates to yield carbon dioxide gas, water, and a salt. For example, sodium carbonate reacts with dilute hydrochloric acid to produce sodium chloride, water, and carbon dioxide: Na2CO3 + 2HCl -> 2NaCl + H2O + CO2. Passing carbon dioxide gas through lime water turns it milky due to the formation of calcium carbonate precipitate.',
+          sourceFile: 'Class 10 Science Chapter 2.pdf',
+          pageNumber: 20,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        }
+      ];
+      writeMockDB(db);
+      console.log("🌱 Mock textbook content seeded successfully!");
+    }
+
+    // Auto-seed syllabus in Mock DB on startup if empty
+    const freshDb = readMockDB();
+    if (!freshDb.chapters || freshDb.chapters.length === 0) {
+      try {
+        const syllabusPath = path.join(__dirname, 'full_syllabus.json');
+        if (fs.existsSync(syllabusPath)) {
+          const rawSyllabus = fs.readFileSync(syllabusPath, 'utf8');
+          const syllabusArray = JSON.parse(rawSyllabus);
+          await bulkInsertSyllabus(syllabusArray);
+          console.log("🌱 Mock Database was empty of syllabus. Automatically seeded Class 6-10 syllabus!");
+        }
+      } catch (seedErr) {
+        console.log("⚠️ Auto-seed mock syllabus failed:", seedErr.message);
+      }
     }
   }
 }
@@ -781,6 +1144,30 @@ async function updateUser(id, updateData) {
   return updatedUser;
 }
 
+async function getAllUsers() {
+  if (!isMockMode) {
+    return await UserModel.find({});
+  } else {
+    const db = readMockDB();
+    return db.users;
+  }
+}
+
+async function deleteUser(id) {
+  if (!isMockMode) {
+    await UserModel.findByIdAndDelete(id);
+    await StudentProfileModel.deleteOne({ userId: id });
+  } else {
+    const db = readMockDB();
+    db.users = db.users.filter(u => u._id !== id);
+    if (db.studentProfiles) {
+      db.studentProfiles = db.studentProfiles.filter(sp => sp.userId !== id);
+    }
+    writeMockDB(db);
+  }
+  return true;
+}
+
 // Quizzes API
 async function getQuizzesByClass(classNum) {
   if (!isMockMode) {
@@ -889,13 +1276,15 @@ async function deleteHomework(homeworkId) {
 
 async function getAllClasses() {
   if (!isMockMode) {
-    const list = await ClassModel.find({}).sort({ classNum: 1 });
+    const list = await ClassModel.find({ classNum: { $gte: 6, $lte: 10 } }).sort({ classNum: 1 });
+    if (list.length === 0) return [6, 7, 8, 9, 10];
     return list.map(c => c.classNum);
   } else {
     const db = readMockDB();
     if (!db.classes) db.classes = [];
-    const nums = db.classes.map(c => c.classNum);
-    return [...new Set(nums)].sort((a, b) => a - b);
+    const nums = db.classes.map(c => c.classNum).filter(n => n >= 6 && n <= 10);
+    const unique = [...new Set(nums)].sort((a, b) => a - b);
+    return unique.length > 0 ? unique : [6, 7, 8, 9, 10];
   }
 }
 
@@ -1306,6 +1695,161 @@ async function publishPendingSyllabusData(classNum, subjectName, extractedData) 
   }
 }
 
+async function addManualTopic(classNum, subjectName, chapterName, topicName) {
+  classNum = Number(classNum);
+  if (!isMockMode) {
+    await ClassModel.findOneAndUpdate(
+      { classNum },
+      { classNum },
+      { upsert: true, new: true }
+    );
+    let subject = await SubjectModel.findOne({ classNum, name: new RegExp(`^${subjectName}$`, 'i') });
+    if (!subject) {
+      subject = await SubjectModel.create({ classNum, name: subjectName });
+    }
+    let chapter = await ChapterModel.findOne({ classNum, subjectName: subject.name, name: new RegExp(`^${chapterName}$`, 'i') });
+    if (!chapter) {
+      chapter = await ChapterModel.create({ classNum, subjectName: subject.name, name: chapterName });
+    }
+    let topic = await TopicModel.findOne({ classNum, subjectName: subject.name, chapterName: chapter.name, name: new RegExp(`^${topicName}$`, 'i') });
+    if (!topic) {
+      topic = await TopicModel.create({ classNum, subjectName: subject.name, chapterName: chapter.name, name: topicName });
+    }
+    return topic;
+  } else {
+    const db = readMockDB();
+    if (!db.classes) db.classes = [];
+    if (!db.subjects) db.subjects = [];
+    if (!db.chapters) db.chapters = [];
+    if (!db.topics) db.topics = [];
+
+    if (!db.classes.find(c => c.classNum === classNum)) {
+      db.classes.push({ _id: crypto.randomUUID(), classNum });
+    }
+    let subject = db.subjects.find(s => s.classNum === classNum && s.name.toLowerCase() === subjectName.toLowerCase());
+    if (!subject) {
+      subject = { _id: crypto.randomUUID(), classNum, name: subjectName };
+      db.subjects.push(subject);
+    }
+    let chapter = db.chapters.find(
+      c => c.classNum === classNum &&
+           c.subjectName.toLowerCase() === subject.name.toLowerCase() &&
+           c.name.toLowerCase() === chapterName.toLowerCase()
+    );
+    if (!chapter) {
+      chapter = { _id: crypto.randomUUID(), classNum, subjectName: subject.name, name: chapterName };
+      db.chapters.push(chapter);
+    }
+    let topic = db.topics.find(
+      t => t.classNum === classNum &&
+           t.subjectName.toLowerCase() === subject.name.toLowerCase() &&
+           t.chapterName.toLowerCase() === chapter.name.toLowerCase() &&
+           t.name.toLowerCase() === topicName.toLowerCase()
+    );
+    if (!topic) {
+      topic = { _id: crypto.randomUUID(), classNum, subjectName: subject.name, chapterName: chapter.name, name: topicName };
+      db.topics.push(topic);
+    }
+    writeMockDB(db);
+    return topic;
+  }
+}
+
+async function deleteManualTopic(classNum, subjectName, chapterName, topicName) {
+  classNum = Number(classNum);
+  if (!isMockMode) {
+    await TopicModel.deleteOne({
+      classNum,
+      subjectName: new RegExp(`^${subjectName}$`, 'i'),
+      chapterName: new RegExp(`^${chapterName}$`, 'i'),
+      name: new RegExp(`^${topicName}$`, 'i')
+    });
+  } else {
+    const db = readMockDB();
+    if (db.topics) {
+      db.topics = db.topics.filter(t => !(
+        t.classNum === classNum &&
+        t.subjectName.toLowerCase() === subjectName.toLowerCase() &&
+        t.chapterName.toLowerCase() === chapterName.toLowerCase() &&
+        t.name.toLowerCase() === topicName.toLowerCase()
+      ));
+      writeMockDB(db);
+    }
+  }
+}
+
+async function deleteManualChapter(classNum, subjectName, chapterName) {
+  classNum = Number(classNum);
+  if (!isMockMode) {
+    await TopicModel.deleteMany({
+      classNum,
+      subjectName: new RegExp(`^${subjectName}$`, 'i'),
+      chapterName: new RegExp(`^${chapterName}$`, 'i')
+    });
+    await ChapterModel.deleteOne({
+      classNum,
+      subjectName: new RegExp(`^${subjectName}$`, 'i'),
+      name: new RegExp(`^${chapterName}$`, 'i')
+    });
+  } else {
+    const db = readMockDB();
+    if (db.topics) {
+      db.topics = db.topics.filter(t => !(
+        t.classNum === classNum &&
+        t.subjectName.toLowerCase() === subjectName.toLowerCase() &&
+        t.chapterName.toLowerCase() === chapterName.toLowerCase()
+      ));
+    }
+    if (db.chapters) {
+      db.chapters = db.chapters.filter(c => !(
+        c.classNum === classNum &&
+        c.subjectName.toLowerCase() === subjectName.toLowerCase() &&
+        c.name.toLowerCase() === chapterName.toLowerCase()
+      ));
+    }
+    writeMockDB(db);
+  }
+}
+
+async function deleteManualSubject(classNum, subjectName) {
+  classNum = Number(classNum);
+  if (!isMockMode) {
+    await TopicModel.deleteMany({
+      classNum,
+      subjectName: new RegExp(`^${subjectName}$`, 'i')
+    });
+    await ChapterModel.deleteMany({
+      classNum,
+      subjectName: new RegExp(`^${subjectName}$`, 'i')
+    });
+    await SubjectModel.deleteOne({
+      classNum,
+      name: new RegExp(`^${subjectName}$`, 'i')
+    });
+  } else {
+    const db = readMockDB();
+    if (db.topics) {
+      db.topics = db.topics.filter(t => !(
+        t.classNum === classNum &&
+        t.subjectName.toLowerCase() === subjectName.toLowerCase()
+      ));
+    }
+    if (db.chapters) {
+      db.chapters = db.chapters.filter(c => !(
+        c.classNum === classNum &&
+        c.subjectName.toLowerCase() === subjectName.toLowerCase()
+      ));
+    }
+    if (db.subjects) {
+      db.subjects = db.subjects.filter(s => !(
+        s.classNum === classNum &&
+        s.name.toLowerCase() === subjectName.toLowerCase()
+      ));
+    }
+    writeMockDB(db);
+  }
+}
+
 // --- Study Buddy Dynamic Helpers ---
 async function getStudentProfileByUserId(userId) {
   if (!isMockMode) {
@@ -1565,34 +2109,36 @@ async function unlockAchievement(userId, title, type) {
 
 // --- Teacher Verification System DB Helpers ---
 
-// 1. Teacher APIs
+// 1. Teacher APIs (unified to UserModel)
 async function findTeacherByEmail(email) {
   if (!isMockMode) {
-    return await TeacherModel.findOne({ email: email.toLowerCase() });
+    return await UserModel.findOne({ email: email.toLowerCase() });
   } else {
     const db = readMockDB();
-    if (!db.teachers) db.teachers = [];
-    return db.teachers.find(t => t.email.toLowerCase() === email.toLowerCase()) || null;
+    return db.users.find(u => u.email.toLowerCase() === email.toLowerCase() && ['teacher', 'admin', 'super_admin'].includes(u.role)) || null;
   }
 }
 
 async function findTeacherById(id) {
   if (!isMockMode) {
-    return await TeacherModel.findById(id);
+    return await UserModel.findById(id);
   } else {
     const db = readMockDB();
-    if (!db.teachers) db.teachers = [];
-    return db.teachers.find(t => t._id === id) || null;
+    return db.users.find(u => u._id === id) || null;
   }
 }
 
 async function createTeacher(teacherData) {
   if (!isMockMode) {
-    const teacher = new TeacherModel(teacherData);
+    const teacher = new UserModel({
+      ...teacherData,
+      role: teacherData.role || 'teacher',
+      status: teacherData.status || 'pending'
+    });
     return await teacher.save();
   } else {
     const db = readMockDB();
-    if (!db.teachers) db.teachers = [];
+    if (!db.users) db.users = [];
     const newTeacher = {
       _id: crypto.randomUUID(),
       ...teacherData,
@@ -1601,7 +2147,7 @@ async function createTeacher(teacherData) {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };
-    db.teachers.push(newTeacher);
+    db.users.push(newTeacher);
     writeMockDB(db);
     return newTeacher;
   }
@@ -1611,20 +2157,19 @@ async function updateTeacherStatus(id, status, approvedBy = '') {
   if (!isMockMode) {
     const update = { status };
     if (approvedBy) update.approvedBy = approvedBy;
-    return await TeacherModel.findByIdAndUpdate(id, { $set: update }, { new: true });
+    return await UserModel.findByIdAndUpdate(id, { $set: update }, { new: true });
   } else {
     const db = readMockDB();
-    if (!db.teachers) db.teachers = [];
-    const idx = db.teachers.findIndex(t => t._id === id);
+    const idx = db.users.findIndex(u => u._id === id);
     if (idx !== -1) {
-      db.teachers[idx] = {
-        ...db.teachers[idx],
+      db.users[idx] = {
+        ...db.users[idx],
         status,
-        approvedBy: approvedBy || db.teachers[idx].approvedBy,
+        approvedBy: approvedBy || db.users[idx].approvedBy,
         updatedAt: new Date().toISOString()
       };
       writeMockDB(db);
-      return db.teachers[idx];
+      return db.users[idx];
     }
     return null;
   }
@@ -1632,25 +2177,42 @@ async function updateTeacherStatus(id, status, approvedBy = '') {
 
 async function getAllTeachers() {
   if (!isMockMode) {
-    return await TeacherModel.find({}).sort({ createdAt: -1 });
+    return await UserModel.find({ role: { $in: ['teacher', 'admin', 'super_admin'] } }).sort({ createdAt: -1 });
   } else {
     const db = readMockDB();
-    if (!db.teachers) db.teachers = [];
-    return [...db.teachers].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    return db.users.filter(u => ['teacher', 'admin', 'super_admin'].includes(u.role)).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
   }
 }
 
 async function deleteTeacher(id) {
   if (!isMockMode) {
-    return await TeacherModel.findByIdAndDelete(id);
+    return await UserModel.findByIdAndDelete(id);
   } else {
     const db = readMockDB();
-    if (!db.teachers) db.teachers = [];
-    const idx = db.teachers.findIndex(t => t._id === id);
+    const idx = db.users.findIndex(u => u._id === id);
     if (idx !== -1) {
-      const deleted = db.teachers.splice(idx, 1);
+      const deleted = db.users.splice(idx, 1);
       writeMockDB(db);
       return deleted[0];
+    }
+    return null;
+  }
+}
+
+async function updateTeacher(id, updateData) {
+  if (!isMockMode) {
+    return await UserModel.findByIdAndUpdate(id, { $set: updateData }, { new: true });
+  } else {
+    const db = readMockDB();
+    const idx = db.users.findIndex(u => u._id === id);
+    if (idx !== -1) {
+      db.users[idx] = {
+        ...db.users[idx],
+        ...updateData,
+        updatedAt: new Date().toISOString()
+      };
+      writeMockDB(db);
+      return db.users[idx];
     }
     return null;
   }
@@ -1764,6 +2326,40 @@ async function findVerifiedAnswer(questionText, className, subjectName, chapterN
   }
 }
 
+/**
+ * Find any existing AI answer (pending, approved, or edited) for deduplication.
+ * Used to prevent creating duplicate DB records when the same question is asked
+ * multiple times before it gets approved.
+ */
+async function findExistingAnswer(questionText, className, subjectName) {
+  const cleanQ = questionText.trim().toLowerCase().replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ");
+  if (!isMockMode) {
+    const query = {
+      class: Number(className),
+      subject: subjectName,
+      verificationStatus: { $in: ['pending', 'approved', 'edited'] }
+    };
+    const answers = await AIAnswerModel.find(query);
+    return answers.find(a => {
+      const cleanA = a.question.trim().toLowerCase().replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ");
+      return cleanA === cleanQ;
+    }) || null;
+  } else {
+    const db = readMockDB();
+    if (!db.aiAnswers) db.aiAnswers = [];
+    const list = db.aiAnswers.filter(a =>
+      Number(a.class) === Number(className) &&
+      a.subject === subjectName &&
+      ['pending', 'approved', 'edited'].includes(a.verificationStatus)
+    );
+    return list.find(a => {
+      const cleanA = a.question.trim().toLowerCase().replace(/[?.,\/#!$%\^&\*;:{}=\-_`~()]/g, "").replace(/\s+/g, " ");
+      return cleanA === cleanQ;
+    }) || null;
+  }
+}
+
+
 async function getAIAnswersStats() {
   if (!isMockMode) {
     const total = await AIAnswerModel.countDocuments();
@@ -1791,9 +2387,521 @@ async function getAIAnswersStats() {
   }
 }
 
+// --- RBAC & System Management Helper APIs ---
+
+// 1. Admin Profiles
+async function createAdminProfile(userId, assignedBy, permissionSet, department) {
+  if (!isMockMode) {
+    await AdminProfileModel.deleteOne({ userId });
+    const profile = new AdminProfileModel({ userId, assignedBy, permissionSet, department });
+    return await profile.save();
+  } else {
+    const db = readMockDB();
+    if (!db.adminProfiles) db.adminProfiles = [];
+    db.adminProfiles = db.adminProfiles.filter(ap => ap.userId !== userId);
+    const newProfile = {
+      _id: crypto.randomUUID(),
+      userId,
+      assignedBy,
+      permissionSet,
+      department,
+      createdAt: new Date().toISOString()
+    };
+    db.adminProfiles.push(newProfile);
+    writeMockDB(db);
+    return newProfile;
+  }
+}
+
+async function getAdminProfiles() {
+  if (!isMockMode) {
+    return await AdminProfileModel.find({});
+  } else {
+    const db = readMockDB();
+    return db.adminProfiles || [];
+  }
+}
+
+async function deleteAdminProfile(userId) {
+  if (!isMockMode) {
+    return await AdminProfileModel.deleteOne({ userId });
+  } else {
+    const db = readMockDB();
+    if (db.adminProfiles) {
+      db.adminProfiles = db.adminProfiles.filter(ap => ap.userId !== userId);
+      writeMockDB(db);
+    }
+    return true;
+  }
+}
+
+// 2. Audit Logs
+async function logAuditAction(action, performedBy, targetUser = '', metadata = {}) {
+  if (!isMockMode) {
+    try {
+      const log = new AuditLogModel({ action, performedBy, targetUser, metadata });
+      await log.save();
+    } catch (err) {
+      console.error("⚠️ Failed to write MongoDB audit log:", err);
+    }
+  } else {
+    try {
+      const db = readMockDB();
+      if (!db.auditLogs) db.auditLogs = [];
+      const newLog = {
+        _id: crypto.randomUUID(),
+        action,
+        performedBy,
+        targetUser,
+        metadata,
+        createdAt: new Date().toISOString()
+      };
+      db.auditLogs.push(newLog);
+      writeMockDB(db);
+    } catch (err) {
+      console.error("⚠️ Failed to write file audit log:", err);
+    }
+  }
+}
+
+async function getAuditLogs() {
+  if (!isMockMode) {
+    return await AuditLogModel.find({}).sort({ createdAt: -1 });
+  } else {
+    const db = readMockDB();
+    if (!db.auditLogs) db.auditLogs = [];
+    return [...db.auditLogs].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+}
+
+// 3. Announcements
+async function createAnnouncement(title, content, createdBy) {
+  if (!isMockMode) {
+    const announce = new AnnouncementModel({ title, content, createdBy });
+    return await announce.save();
+  } else {
+    const db = readMockDB();
+    if (!db.announcements) db.announcements = [];
+    const newAnn = {
+      _id: crypto.randomUUID(),
+      title,
+      content,
+      createdBy,
+      createdAt: new Date().toISOString()
+    };
+    db.announcements.push(newAnn);
+    writeMockDB(db);
+    return newAnn;
+  }
+}
+
+async function getAnnouncements() {
+  if (!isMockMode) {
+    return await AnnouncementModel.find({}).sort({ createdAt: -1 });
+  } else {
+    const db = readMockDB();
+    if (!db.announcements) db.announcements = [];
+    return [...db.announcements].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+}
+
+async function deleteAnnouncement(id) {
+  if (!isMockMode) {
+    return await AnnouncementModel.findByIdAndDelete(id);
+  } else {
+    const db = readMockDB();
+    if (db.announcements) {
+      db.announcements = db.announcements.filter(a => a._id !== id);
+      writeMockDB(db);
+    }
+    return true;
+  }
+}
+
+// 4. Reports
+async function createReport(type, content, reportedBy, targetItem = '') {
+  if (!isMockMode) {
+    const report = new ReportModel({ type, content, reportedBy, targetItem });
+    return await report.save();
+  } else {
+    const db = readMockDB();
+    if (!db.reports) db.reports = [];
+    const newReport = {
+      _id: crypto.randomUUID(),
+      type,
+      content,
+      reportedBy,
+      targetItem,
+      status: 'pending',
+      createdAt: new Date().toISOString()
+    };
+    db.reports.push(newReport);
+    writeMockDB(db);
+    return newReport;
+  }
+}
+
+async function getReports() {
+  if (!isMockMode) {
+    return await ReportModel.find({}).sort({ createdAt: -1 });
+  } else {
+    const db = readMockDB();
+    if (!db.reports) db.reports = [];
+    return [...db.reports].sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+}
+
+async function updateReportStatus(id, status) {
+  if (!isMockMode) {
+    return await ReportModel.findByIdAndUpdate(id, { $set: { status } }, { new: true });
+  } else {
+    const db = readMockDB();
+    if (!db.reports) db.reports = [];
+    const idx = db.reports.findIndex(r => r._id === id);
+    if (idx !== -1) {
+      db.reports[idx].status = status;
+      writeMockDB(db);
+      return db.reports[idx];
+    }
+    return null;
+  }
+}
+
+async function resolveDoubt(id, teacherAnswer, teacherObj) {
+  if (!isMockMode) {
+    return await DoubtModel.findByIdAndUpdate(id, {
+      $set: {
+        teacherAnswer,
+        status: 'resolved',
+        resolvedBy: teacherObj,
+        resolvedAt: new Date()
+      }
+    }, { new: true });
+  } else {
+    const db = readMockDB();
+    if (!db.doubts) db.doubts = [];
+    const idx = db.doubts.findIndex(d => d._id === id);
+    if (idx !== -1) {
+      db.doubts[idx].teacherAnswer = teacherAnswer;
+      db.doubts[idx].status = 'resolved';
+      db.doubts[idx].resolvedBy = teacherObj;
+      db.doubts[idx].resolvedAt = new Date().toISOString();
+      db.doubts[idx].updatedAt = new Date().toISOString();
+      writeMockDB(db);
+      return db.doubts[idx];
+    }
+    return null;
+  }
+}
+
+async function saveTextbookContent(data) {
+  if (!isMockMode) {
+    const content = new TextbookContentModel(data);
+    return await content.save();
+  } else {
+    const db = readMockDB();
+    if (!db.textbookContents) db.textbookContents = [];
+    const newContent = {
+      _id: crypto.randomUUID(),
+      ...data,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    db.textbookContents.push(newContent);
+    writeMockDB(db);
+    return newContent;
+  }
+}
+
+async function searchTextbookContent(classNum, subjectName, chapterName, query) {
+  if (!isMockMode) {
+    const filter = { classNum: Number(classNum), subjectName };
+    if (chapterName && chapterName !== 'General') {
+      filter.chapterName = chapterName;
+    }
+    const contents = await TextbookContentModel.find(filter);
+    if (!query) return contents;
+    
+    const cleanQuery = query.toLowerCase();
+    return contents.filter(c => c.content.toLowerCase().includes(cleanQuery) || 
+                               cleanQuery.split(/\s+/).some(word => word.length > 4 && c.content.toLowerCase().includes(word)));
+  } else {
+    const db = readMockDB();
+    if (!db.textbookContents) db.textbookContents = [];
+    let contents = db.textbookContents.filter(c => c.classNum === Number(classNum) && c.subjectName === subjectName);
+    if (chapterName && chapterName !== 'General') {
+      contents = contents.filter(c => c.chapterName === chapterName);
+    }
+    if (!query) return contents;
+    const cleanQuery = query.toLowerCase();
+    return contents.filter(c => c.content.toLowerCase().includes(cleanQuery) || 
+                               cleanQuery.split(/\s+/).some(word => word.length > 4 && c.content.toLowerCase().includes(word)));
+  }
+}
+
+async function createDoubt(data) {
+  if (!isMockMode) {
+    const doubt = new DoubtModel(data);
+    return await doubt.save();
+  } else {
+    const db = readMockDB();
+    if (!db.doubts) db.doubts = [];
+    const newDoubt = {
+      _id: crypto.randomUUID(),
+      ...data,
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+    db.doubts.push(newDoubt);
+    writeMockDB(db);
+    return newDoubt;
+  }
+}
+
+async function getDoubtsByStudent(studentId) {
+  if (!isMockMode) {
+    return await DoubtModel.find({ studentId }).sort({ createdAt: -1 });
+  } else {
+    const db = readMockDB();
+    if (!db.doubts) db.doubts = [];
+    return db.doubts.filter(d => d.studentId === studentId).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+}
+
+async function getPendingDoubts(filters = {}) {
+  if (!isMockMode) {
+    const query = { status: 'pending' };
+    if (filters.classNum) query.classNum = Number(filters.classNum);
+    if (filters.subject) query.subject = filters.subject;
+    return await DoubtModel.find(query).sort({ createdAt: 1 });
+  } else {
+    const db = readMockDB();
+    if (!db.doubts) db.doubts = [];
+    let list = db.doubts.filter(d => d.status === 'pending');
+    if (filters.classNum) list = list.filter(d => d.classNum === Number(filters.classNum));
+    if (filters.subject) list = list.filter(d => d.subject === filters.subject);
+    return list.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  }
+}
+
+async function createSupportTicket(data) {
+  const id = data._id || crypto.randomUUID();
+  const ticketData = {
+    _id: id,
+    studentId: data.studentId,
+    studentName: data.studentName || 'Student',
+    classNum: data.classNum || 10,
+    subject: data.subject || 'General',
+    question: data.question,
+    aiAnswer: data.aiAnswer,
+    supportType: data.supportType || 'text',
+    status: 'pending',
+    assignedTeacher: null,
+    assignedTeacherName: null,
+    teacherAnswer: '',
+    whiteboardImage: '',
+    createdAt: new Date(),
+    assignedAt: null,
+    resolvedAt: null
+  };
+
+  if (!isMockMode) {
+    const ticket = new SupportTicketModel(ticketData);
+    return await ticket.save();
+  } else {
+    const dbData = readMockDB();
+    if (!dbData.supportTickets) dbData.supportTickets = [];
+    dbData.supportTickets.push(ticketData);
+    writeMockDB(dbData);
+    return ticketData;
+  }
+}
+
+async function getStudentTickets(studentId) {
+  const idStr = studentId ? studentId.toString() : '';
+  if (!isMockMode) {
+    return await SupportTicketModel.find({ studentId: idStr }).sort({ createdAt: -1 });
+  } else {
+    const dbData = readMockDB();
+    const tickets = dbData.supportTickets || [];
+    return tickets.filter(t => t.studentId === idStr).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  }
+}
+
+async function getPendingTickets() {
+  if (!isMockMode) {
+    return await SupportTicketModel.find({ status: 'pending' }).sort({ createdAt: 1 });
+  } else {
+    const dbData = readMockDB();
+    const tickets = dbData.supportTickets || [];
+    return tickets.filter(t => t.status === 'pending').sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+  }
+}
+
+async function getTeacherActiveTickets(teacherId) {
+  if (!isMockMode) {
+    return await SupportTicketModel.find({ assignedTeacher: teacherId, status: 'assigned' }).sort({ assignedAt: -1 });
+  } else {
+    const dbData = readMockDB();
+    const tickets = dbData.supportTickets || [];
+    return tickets.filter(t => t.assignedTeacher === teacherId && t.status === 'assigned').sort((a, b) => new Date(b.assignedAt) - new Date(a.assignedAt));
+  }
+}
+
+async function getTeacherCompletedTickets(teacherId) {
+  if (!isMockMode) {
+    return await SupportTicketModel.find({ assignedTeacher: teacherId, status: 'completed' }).sort({ resolvedAt: -1 });
+  } else {
+    const dbData = readMockDB();
+    const tickets = dbData.supportTickets || [];
+    return tickets.filter(t => t.assignedTeacher === teacherId && t.status === 'completed').sort((a, b) => new Date(b.resolvedAt) - new Date(a.resolvedAt));
+  }
+}
+
+async function acceptSupportTicket(ticketId, teacherId, teacherName) {
+  if (!isMockMode) {
+    return await SupportTicketModel.findByIdAndUpdate(ticketId, {
+      status: 'assigned',
+      assignedTeacher: teacherId,
+      assignedTeacherName: teacherName,
+      assignedAt: new Date()
+    }, { new: true });
+  } else {
+    const dbData = readMockDB();
+    if (!dbData.supportTickets) dbData.supportTickets = [];
+    const ticketIdx = dbData.supportTickets.findIndex(t => t._id === ticketId);
+    if (ticketIdx !== -1) {
+      dbData.supportTickets[ticketIdx].status = 'assigned';
+      dbData.supportTickets[ticketIdx].assignedTeacher = teacherId;
+      dbData.supportTickets[ticketIdx].assignedTeacherName = teacherName;
+      dbData.supportTickets[ticketIdx].assignedAt = new Date();
+      writeMockDB(dbData);
+      return dbData.supportTickets[ticketIdx];
+    }
+    return null;
+  }
+}
+
+async function resolveSupportTicket(ticketId, teacherAnswer, whiteboardImage) {
+  if (!isMockMode) {
+    return await SupportTicketModel.findByIdAndUpdate(ticketId, {
+      status: 'completed',
+      teacherAnswer: teacherAnswer || '',
+      whiteboardImage: whiteboardImage || '',
+      resolvedAt: new Date()
+    }, { new: true });
+  } else {
+    const dbData = readMockDB();
+    if (!dbData.supportTickets) dbData.supportTickets = [];
+    const ticketIdx = dbData.supportTickets.findIndex(t => t._id === ticketId);
+    if (ticketIdx !== -1) {
+      dbData.supportTickets[ticketIdx].status = 'completed';
+      dbData.supportTickets[ticketIdx].teacherAnswer = teacherAnswer || '';
+      dbData.supportTickets[ticketIdx].whiteboardImage = whiteboardImage || '';
+      dbData.supportTickets[ticketIdx].resolvedAt = new Date();
+      writeMockDB(dbData);
+      return dbData.supportTickets[ticketIdx];
+    }
+    return null;
+  }
+}
+
+async function getTicketById(ticketId) {
+  if (!isMockMode) {
+    return await SupportTicketModel.findById(ticketId);
+  } else {
+    const dbData = readMockDB();
+    const tickets = dbData.supportTickets || [];
+    return tickets.find(t => t._id === ticketId) || null;
+  }
+}
+
+async function deleteSupportTicket(ticketId) {
+  if (!isMockMode) {
+    return await SupportTicketModel.findByIdAndDelete(ticketId);
+  } else {
+    const dbData = readMockDB();
+    if (!dbData.supportTickets) dbData.supportTickets = [];
+    const ticketIdx = dbData.supportTickets.findIndex(t => t._id === ticketId);
+    if (ticketIdx !== -1) {
+      const deleted = dbData.supportTickets.splice(ticketIdx, 1)[0];
+      writeMockDB(dbData);
+      return deleted;
+    }
+    return null;
+  }
+}
+
+async function deleteNotificationsForTicket(ticketId) {
+  if (!isMockMode) {
+    return await NotificationModel.deleteMany({ "metadata.ticketId": ticketId });
+  } else {
+    const db = readMockDB();
+    if (!db.notifications) db.notifications = [];
+    const initialLength = db.notifications.length;
+    db.notifications = db.notifications.filter(n => n.metadata?.ticketId !== ticketId);
+    writeMockDB(db);
+    return { deletedCount: initialLength - db.notifications.length };
+  }
+}
+
+async function getStudentMemory(userId) {
+  if (!isMockMode) {
+    let mem = await StudentMemoryModel.findOne({ userId });
+    if (!mem) {
+      mem = await StudentMemoryModel.create({ userId });
+    }
+    return mem;
+  } else {
+    const db = readMockDB();
+    if (!db.studentMemories) db.studentMemories = [];
+    let mem = db.studentMemories.find(m => m.userId === userId);
+    if (!mem) {
+      mem = {
+        userId,
+        weakChapters: [],
+        strongChapters: [],
+        previousMistakes: [],
+        completedChapters: [],
+        quizHistory: [],
+        revisionHistory: [],
+        learningSpeed: 'Average'
+      };
+      db.studentMemories.push(mem);
+      writeMockDB(db);
+    }
+    return mem;
+  }
+}
+
+async function saveStudentMemory(userId, memoryData) {
+  if (!isMockMode) {
+    return await StudentMemoryModel.findOneAndUpdate(
+      { userId },
+      { $set: memoryData },
+      { new: true, upsert: true }
+    );
+  } else {
+    const db = readMockDB();
+    if (!db.studentMemories) db.studentMemories = [];
+    const idx = db.studentMemories.findIndex(m => m.userId === userId);
+    if (idx > -1) {
+      db.studentMemories[idx] = { ...db.studentMemories[idx], ...memoryData };
+    } else {
+      db.studentMemories.push({ userId, ...memoryData });
+    }
+    writeMockDB(db);
+    return db.studentMemories.find(m => m.userId === userId);
+  }
+}
+
 module.exports = {
+  // Database connection
   connectDB,
   isMockMode: () => isMockMode,
+
+  // Student Auth & Dashboard Helpers
   findUserByEmail,
   findUserById,
   createUser,
@@ -1811,8 +2919,42 @@ module.exports = {
   clearSyllabus,
   getReminderByUser,
   saveReminder,
-  
-  // Expose new helpers
+  getStudentProfileByUserId,
+  saveStudentProfile,
+  getExamsByUser,
+  createExam,
+  deleteExam,
+  createStudyPlan,
+  getStudyPlanByUser,
+  getActiveStudyPlan,
+  saveQuizResult,
+  getQuizResultsByUser,
+  getAchievementsByUser,
+  unlockAchievement,
+  getStudentMemory,
+  saveStudentMemory,
+
+  // Notification System Helpers
+  createNotification,
+  getNotificationsForRecipient,
+  markNotificationsAsRead,
+  getNotificationById,
+  updateNotificationStatus,
+
+  // Expose RBAC & Admin helpers
+  createAdminProfile,
+  getAdminProfiles,
+  deleteAdminProfile,
+  logAuditAction,
+  getAuditLogs,
+  createAnnouncement,
+  getAnnouncements,
+  deleteAnnouncement,
+  createReport,
+  getReports,
+  updateReportStatus,
+
+  // Syllabus helpers
   getAllClasses,
   getSubjectsByClass,
   getChaptersByClassAndSubject,
@@ -1829,20 +2971,6 @@ module.exports = {
   deletePendingSyllabus,
   publishPendingSyllabusData,
 
-  // Study Buddy dynamic helpers
-  getStudentProfileByUserId,
-  saveStudentProfile,
-  getExamsByUser,
-  createExam,
-  deleteExam,
-  createStudyPlan,
-  getStudyPlanByUser,
-  getActiveStudyPlan,
-  saveQuizResult,
-  getQuizResultsByUser,
-  getAchievementsByUser,
-  unlockAchievement,
-
   // Teacher Verification System Helpers
   findTeacherByEmail,
   findTeacherById,
@@ -1850,10 +2978,124 @@ module.exports = {
   updateTeacherStatus,
   getAllTeachers,
   deleteTeacher,
+  updateTeacher,
+  getAllUsers,
+  deleteUser,
   createAIAnswer,
   findAIAnswerById,
   getAIAnswers,
   updateAIAnswerVerification,
   findVerifiedAnswer,
-  getAIAnswersStats
+  findExistingAnswer,
+  getAIAnswersStats,
+  
+  // Manual syllabus helpers
+  addManualTopic,
+  deleteManualTopic,
+  deleteManualChapter,
+  deleteManualSubject,
+
+  // Multi-Layer Trust helpers
+  saveTextbookContent,
+  searchTextbookContent,
+  createDoubt,
+  getDoubtsByStudent,
+  getPendingDoubts,
+  resolveDoubt,
+
+  // Support Ticket helpers
+  createSupportTicket,
+  getStudentTickets,
+  getPendingTickets,
+  getTeacherActiveTickets,
+  getTeacherCompletedTickets,
+  acceptSupportTicket,
+  resolveSupportTicket,
+  getTicketById,
+  deleteSupportTicket,
+  deleteNotificationsForTicket
 };
+
+// --- Notification System Helpers Implementation ---
+async function createNotification(data) {
+  const notificationData = {
+    _id: data._id || crypto.randomUUID(),
+    recipientId: data.recipientId,
+    title: data.title,
+    body: data.body,
+    type: data.type || 'doubt',
+    status: data.status || 'new',
+    read: false,
+    metadata: data.metadata || {},
+    createdAt: new Date(),
+    updatedAt: new Date()
+  };
+
+  if (!isMockMode) {
+    const notification = new NotificationModel(notificationData);
+    return await notification.save();
+  } else {
+    const db = readMockDB();
+    if (!db.notifications) db.notifications = [];
+    db.notifications.push(notificationData);
+    writeMockDB(db);
+    return notificationData;
+  }
+}
+
+async function getNotificationsForRecipient(recipientId) {
+  if (!isMockMode) {
+    return await NotificationModel.find({ recipientId }).sort({ createdAt: -1 });
+  } else {
+    const db = readMockDB();
+    if (!db.notifications) db.notifications = [];
+    return db.notifications
+      .filter(n => n.recipientId === recipientId)
+      .sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
+  }
+}
+
+async function markNotificationsAsRead(recipientId, notificationIds = []) {
+  if (!isMockMode) {
+    const query = { recipientId };
+    if (notificationIds.length > 0) {
+      query._id = { $in: notificationIds };
+    }
+    return await NotificationModel.updateMany(query, { $set: { read: true } });
+  } else {
+    const db = readMockDB();
+    if (!db.notifications) db.notifications = [];
+    db.notifications.forEach(n => {
+      if (n.recipientId === recipientId && (notificationIds.length === 0 || notificationIds.includes(n._id))) {
+        n.read = true;
+      }
+    });
+    writeMockDB(db);
+    return { modifiedCount: notificationIds.length || db.notifications.length };
+  }
+}
+
+async function getNotificationById(id) {
+  if (!isMockMode) {
+    return await NotificationModel.findById(id);
+  } else {
+    const db = readMockDB();
+    if (!db.notifications) db.notifications = [];
+    return db.notifications.find(n => n._id === id) || null;
+  }
+}
+
+async function updateNotificationStatus(id, status) {
+  if (!isMockMode) {
+    return await NotificationModel.findByIdAndUpdate(id, { $set: { status } }, { new: true });
+  } else {
+    const db = readMockDB();
+    if (!db.notifications) db.notifications = [];
+    const n = db.notifications.find(n => n._id === id);
+    if (n) {
+      n.status = status;
+      writeMockDB(db);
+    }
+    return n;
+  }
+}

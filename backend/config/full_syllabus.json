@@ -1,0 +1,371 @@
+[
+  {
+    "class": 6,
+    "subject": "Mathematics",
+    "chapters": [
+      { "name": "Knowing Our Numbers", "topics": ["Comparing Numbers", "Large Numbers in Practice", "Estimation", "Roman Numerals"] },
+      { "name": "Whole Numbers", "topics": ["Predecessor and Successor", "The Number Line", "Properties of Whole Numbers", "Patterns in Whole Numbers"] },
+      { "name": "Playing with Numbers", "topics": ["Factors and Multiples", "Prime and Composite Numbers", "Tests for Divisibility", "Common Factors and Multiples", "Prime Factorisation", "HCF and LCM"] },
+      { "name": "Basic Geometrical Ideas", "topics": ["Points, Lines, and Rays", "Parallel and Intersecting Lines", "Curves and Polygons", "Angles, Triangles, and Quadrilaterals", "Circles"] },
+      { "name": "Understanding Elementary Shapes", "topics": ["Measuring Line Segments", "Angles - Right, Straight, and Complete", "Acute, Obtuse, and Reflex Angles", "Classification of Triangles", "Quadrilaterals and Three-Dimensional Shapes"] },
+      { "name": "Integers", "topics": ["Introduction to Integers", "Representation of Integers on a Number Line", "Ordering of Integers", "Addition and Subtraction of Integers"] },
+      { "name": "Fractions", "topics": ["Fraction as a Part of a Whole", "Fraction on the Number Line", "Proper, Improper, and Mixed Fractions", "Equivalent Fractions", "Comparing, Adding, and Subtracting Fractions"] },
+      { "name": "Decimals", "topics": ["Tenths and Hundredths", "Representing Decimals on Number Line", "Comparing Decimals", "Using Decimals in Money, Length, and Weight", "Addition and Subtraction of Decimals"] },
+      { "name": "Data Handling", "topics": ["Recording Data", "Organisation of Data", "Pictograph", "Drawing a Pictograph", "Bar Graph"] },
+      { "name": "Mensuration", "topics": ["Perimeter", "Perimeter of Regular Shapes", "Area", "Area of Rectangle and Square"] },
+      { "name": "Algebra", "topics": ["Introduction to Variables", "Matchstick Patterns", "Common Rules in Algebra", "Expressions with Variables", "Concept of an Equation", "Solving an Equation"] },
+      { "name": "Ratio and Proportion", "topics": ["Concept of Ratio", "Proportion", "Unitary Method"] }
+    ]
+  },
+  {
+    "class": 6,
+    "subject": "Science",
+    "chapters": [
+      { "name": "Components of Food", "topics": ["What Do Different Food Items Contain", "Tests for Starch, Protein, and Fats", "What Do Various Nutrients Do For Our Body", "Balanced Diet", "Deficiency Diseases"] },
+      { "name": "Sorting Materials into Groups", "topics": ["Objects Around Us", "Properties of Materials", "Appearance and Hardness", "Solubility in Water", "Floating or Sinking in Water", "Transparency, Translucency, and Opacity"] },
+      { "name": "Separation of Substances", "topics": ["Need for Separation", "Handpicking, Winnowing, and Threshing", "Sieving and Sedimentation", "Decantation and Filtration", "Evaporation and Condensation", "Saturated Solutions"] },
+      { "name": "Getting to Know Plants", "topics": ["Herbs, Shrubs, and Trees", "Stem and Root Systems", "Tap Roots and Fibrous Roots", "Leaf Structure and Venation", "Transpiration and Photosynthesis", "Structure of a Flower"] },
+      { "name": "Body Movements", "topics": ["Human Body and its Movements", "Ball and Socket Joint", "Pivotal and Hinge Joints", "Fixed Joints", "Skeleton and Rib Cage", "Gait of Animals"] },
+      { "name": "Motion and Measurement of Distances", "topics": ["Story of Transport", "Standard Units of Measurement", "Measuring the Length of a Curved Line", "Types of Motion - Rectilinear, Circular, and Periodic"] },
+      { "name": "Light, Shadows and Reflections", "topics": ["Luminous and Non-luminous Objects", "Transparent, Translucent, and Opaque Objects", "What are Shadows", "Pinhole Camera", "Mirrors and Reflections"] },
+      { "name": "Electricity and Circuits", "topics": ["Electric Cell and Bulb", "Electric Circuit and Switch", "Conductors and Insulators"] },
+      { "name": "Fun with Magnets", "topics": ["Discovery of Magnets", "Magnetic and Non-magnetic Materials", "Poles of a Magnet", "Finding Directions with a Compass", "Making Your Own Magnet", "Attraction and Repulsion between Magnets"] },
+      { "name": "Air Around Us", "topics": ["Is Air Present Everywhere", "What is Air Made Of (Oxygen, Nitrogen, CO2)", "How is Oxygen Replaced in the Atmosphere"] }
+    ]
+  },
+  {
+    "class": 6,
+    "subject": "Social Studies",
+    "chapters": [
+      { "name": "What, Where, How and When?", "topics": ["Finding Out What Happened", "Where Did People Live", "Names of the Land", "Finding Out About the Past", "What Do Dates Mean"] },
+      { "name": "From Hunting-Gathering to Growing Food", "topics": ["The Earliest People", "Choosing a Place to Live", "Finding Out About Fire", "A Changing Environment", "Beginning of Farming and Herding", "A New Way of Life"] },
+      { "name": "In the Earliest Cities", "topics": ["The Story of Harappa", "What Was Special About Harappan Cities", "Houses, Drains, and Streets", "Life in the City", "New Crafts in the City", "Finding Raw Materials"] },
+      { "name": "What Books and Burials Tell Us", "topics": ["One of the Oldest Books in the World", "How Historians Study the Rigveda", "People Described in the Rigveda", "Silent Sentinels - The Story of the Megaliths", "Finding Out About Social Differences"] },
+      { "name": "Kingdoms, Kings and an Early Republic", "topics": ["How Some Men Became Rulers", "Janapadas", "Mahajanapadas", "Taxes", "Changes in Agriculture", "A Closer Look - Magadha and Vajji"] },
+      { "name": "The Earth in the Solar System", "topics": ["Celestial Bodies", "The Solar System", "The Sun and Planets", "The Earth and Moon", "Asteroids and Meteoroids"] },
+      { "name": "Globe: Latitudes and Longitudes", "topics": ["Equator", "Parallels of Latitude", "Heat Zones of the Earth", "Meridians of Longitude", "Longitude and Time", "Why Do We Have Standard Time"] },
+      { "name": "Motions of the Earth", "topics": ["Rotation", "Revolution", "Leap Year", "Solstices and Equinoxes"] },
+      { "name": "Understanding Diversity", "topics": ["Concept of Diversity", "What Diversity Adds to Our Lives", "Diversity in India", "Unity in Diversity"] },
+      { "name": "Diversity and Discrimination", "topics": ["Prejudice and Stereotypes", "Creating Stereotypes", "Inequality and Discrimination", "On Being Discriminated Against", "Striving for Equality"] },
+      { "name": "What is Government?", "topics": ["Role of Government", "Levels of Government", "Laws and the Government", "Types of Government", "Democratic Governments"] }
+    ]
+  },
+  {
+    "class": 6,
+    "subject": "English",
+    "chapters": [
+      { "name": "Who Did Patrick's Homework?", "topics": ["Patrick's Dislike for Homework", "Meeting the Elf", "The Elf's Request", "Patrick's Hard Work", "The True Secret of Homework"] },
+      { "name": "How the Dog Found Himself a New Master!", "topics": ["Why the Dog Needed a Master", "The Wolf and the Bear", "The Bull and the Lion", "Choosing Man as the Ultimate Master"] },
+      { "name": "Taro's Reward", "topics": ["Taro's Love for his Parents", "The Magic Waterfall", "Sake for the Father", "The Greedy Villagers", "The Emperor's Reward"] },
+      { "name": "An Indian-American Woman in Space: Kalpana Chawla", "topics": ["Kalpana's Dream of Flight", "Education and Training", "The First Space Mission", "The Columbia Disaster", "A Message of Inspiration"] },
+      { "name": "A Different Kind of School", "topics": ["Visiting Miss Beam's School", "The System of Education", "Understanding the Game of Blind and Lame Day", "Learning Empathy and Kindness"] }
+    ]
+  },
+  {
+    "class": 6,
+    "subject": "Telugu",
+    "chapters": [
+      { "name": "అమ్మ ఒడి (Amma Vodi)", "topics": ["కవి పరిచయం (బాడిగ వెంకట నరసింహారావు)", "గేయం వినడం, పాడడం", "భాషాంశాలు, వ్యాకరణం"] },
+      { "name": "తృప్తి (Trupti)", "topics": ["సత్యం శంకరమంచి పరిచయం", "కథా విశ్లేషణ", "భాషా క్రీడలు"] },
+      { "name": "మా కొద్దీ తెల్ల దొరతనము", "topics": ["గరిమెళ్ల సత్యనారాయణ", "దేశభక్తి గేయం", "జాతीయోద్యమ నేపథ్యం"] },
+      { "name": "సమయస్ఫూర్తి (Samayasphurthi)", "topics": ["కథా నేపథ్యం", "చతురత, తెలివితేటలు", "వ్యాకరణ అంశాలు"] },
+      { "name": "మన పండుగలు (Mana Pandugalu)", "topics": ["పండుగల ప్రాముఖ్యత", "సంస్కృతి, సంప్రదాయాలు", "పదజాలం"] },
+      { "name": "సుభాషితాలు (Subhashitalu)", "topics": ["నీతి పద్యాలు", "జీవిత సత్యాలు", "వ్యాకరణ విశేషాలు"] }
+    ]
+  },
+  {
+    "class": 6,
+    "subject": "Hindi",
+    "chapters": [
+      { "name": "वह चिड़िया जो", "topics": ["कविता का सस्वर वाचन", "कवि केदारनाथ अग्रवाल", "कठिन शब्दार्थ", "चिड़िया के गुण"] },
+      { "name": "बचपन", "topics": ["कृष्णा सोबती का संस्मरण", "लेखिका का जीवन परिचय", "भाषा की बात", "अतीत और वर्तमान का अंतर"] },
+      { "name": "नादान दोस्त", "topics": ["प्रेमचंद की कहानी", "केशव और श्यामा के चरित्र", "प्रश्नोत्तर", "पक्षियों के प्रति संवेदनशीलता"] },
+      { "name": "चाँद से थोड़ी सी गप्पें", "topics": ["शमशेर बहादुर सिंह की कविता", "बालमन की कल्पनाएँ", "व्याकरण अनुभाग"] }
+    ]
+  },
+  {
+    "class": 7,
+    "subject": "Mathematics",
+    "chapters": [
+      { "name": "Integers", "topics": ["Properties of Addition and Subtraction of Integers", "Multiplication of Integers", "Properties of Multiplication of Integers", "Division of Integers", "Properties of Division of Integers"] },
+      { "name": "Fractions and Decimals", "topics": ["Multiplication of Fractions", "Division of Fractions", "Multiplication of Decimal Numbers", "Division of Decimal Numbers"] },
+      { "name": "Data Handling", "topics": ["Collecting and Organisation of Data", "Arithmetic Mean", "Mode and Median", "Use of Bar Graphs with Chosen Scale", "Double Bar Graphs", "Chance and Probability"] },
+      { "name": "Simple Equations", "topics": ["Setting up of an Equation", "Solving an Equation", "More Equations", "Applications of Simple Equations to Practical Situations"] },
+      { "name": "Lines and Angles", "topics": ["Complementary and Supplementary Angles", "Adjacent and Linear Pair Angles", "Vertically Opposite Angles", "Pairs of Lines - Transversal", "Angles Made by a Transversal", "Checking for Parallel Lines"] },
+      { "name": "The Triangle and its Properties", "topics": ["Medians and Altitudes of a Triangle", "Exterior Angle of a Triangle and its Property", "Angle Sum Property of a Triangle", "Two Special Triangles - Equilateral and Isosceles", "Sum of the Lengths of Two Sides of a Triangle", "Right-Angled Triangles and Pythagoras Property"] },
+      { "name": "Comparing Quantities", "topics": ["Equivalent Ratios", "Percentage - Another Way of Comparing Quantities", "Converting Fractional Numbers and Decimals to Percentage", "Use of Percentages", "Prices Related to an Item - Buying and Selling", "Charge Given on Borrowed Money - Simple Interest"] },
+      { "name": "Rational Numbers", "topics": ["Need for Rational Numbers", "Positive and Negative Rational Numbers", "Rational Numbers on a Number Line", "Rational Numbers in Standard Form", "Comparison of Rational Numbers", "Rational Numbers Between Two Rational Numbers", "Operations on Rational Numbers"] },
+      { "name": "Perimeter and Area", "topics": ["Squares and Rectangles", "Area of a Parallelogram", "Area of a Triangle", "Circles - Circumference and Area", "Conversion of Units", "Applications of Perimeter and Area"] },
+      { "name": "Algebraic Expressions", "topics": ["How are Expressions Formed", "Terms of an Expression", "Like and Unlike Terms", "Monomials, Binomials, Trinomials, and Polynomials", "Addition and Subtraction of Algebraic Expressions", "Finding the Value of an Expression", "Rules and Patterns using Algebraic Expressions"] }
+    ]
+  },
+  {
+    "class": 7,
+    "subject": "Science",
+    "chapters": [
+      { "name": "Nutrition in Plants", "topics": ["Mode of Nutrition in Plants", "Photosynthesis - Food Making Process in Plants", "Other Modes of Nutrition in Plants", "Saprotrophs", "How Nutrients are Replenished in the Soil"] },
+      { "name": "Nutrition in Animals", "topics": ["Different Ways of Taking Food", "Digestion in Humans", "Mouth and Buccal Cavity", "Foodpipe, Stomach, and Small Intestine", "Digestion in Grass-Eating Animals", "Feeding and Digestion in Amoeba"] },
+      { "name": "Heat", "topics": ["Hot and Cold", "Measuring Temperature", "Laboratory and Clinical Thermometer", "Transfer of Heat - Conduction, Convection, and Radiation", "Clothes We Wear in Summer and Winter"] },
+      { "name": "Acids, Bases and Salts", "topics": ["Natural Indicators Around Us", "Neutralisation Process", "Neutralisation in Everyday Life"] },
+      { "name": "Physical and Chemical Changes", "topics": ["Physical Changes", "Chemical Changes", "Rusting of Iron", "Crystallisation"] },
+      { "name": "Respiration in Organisms", "topics": ["Why Do We Respire", "Breathing Process", "How Do We Breathe", "What Do We Breathe Out", "Breathing in Other Animals (Earthworm, Cockroach, Fish)", "Respiration in Plants"] },
+      { "name": "Transportation in Animals and Plants", "topics": ["Circulatory System - Blood, Blood Vessels, and Heart", "Excretion in Animals - Human Excretory System", "Transport of Substances in Plants - Water and Minerals", "Transpiration"] },
+      { "name": "Reproduction in Plants", "topics": ["Modes of Reproduction - Asexual (Budding, Fragmentation, Spore Formation)", "Sexual Reproduction - Pollination and Fertilisation", "Fruits and Seed Formation", "Seed Dispersal"] },
+      { "name": "Motion and Time", "topics": ["Slow or Fast Motion", "Speed", "Measurement of Time - Simple Pendulum", "Units of Time and Speed", "Measuring Speed", "Distance-Time Graph"] },
+      { "name": "Electric Current and its Effects", "topics": ["Symbols of Electric Components", "Heating Effect of Electric Current", "Magnetic Effect of Electric Current", "Electromagnet", "Electric Bell"] },
+      { "name": "Light", "topics": ["Light Travels Along a Straight Line", "Reflection of Light", "Right or Left - Mirror Images", "Playing with Spherical Mirrors - Concave and Convex", "Images Formed by Lenses - Concave and Convex Lenses", "Sunlight - White or Coloured (Spectrum)"] }
+    ]
+  },
+  {
+    "class": 7,
+    "subject": "Social Studies",
+    "chapters": [
+      { "name": "Tracing Changes Through a Thousand Years", "topics": ["New and Old Terminologies", "Historians and their Sources", "New Social and Political Groups", "Regions and Empires", "Old and New Religions", "Thinking About Time and Historical Periods"] },
+      { "name": "New Kings and Kingdoms", "topics": ["The Emergence of New Dynasties", "Administration in the Kingdoms", "Prashastis and Land Grants", "Warfare for Wealth - Tripartite Struggle", "A Closer Look - The Cholas"] },
+      { "name": "The Delhi Sultans", "topics": ["Finding Out About the Delhi Sultans", "From Garrison Town to Empire - The Expansion of the Delhi Sultanate", "Administration and Consolidation under the Khaljis and Tughlaqs", "The Sultanate in the 15th and 16th Centuries"] },
+      { "name": "Environment", "topics": ["What is Environment", "Natural Environment - Lithosphere, Hydrosphere, Atmosphere, Biosphere", "Ecosystem", "Human Environment"] },
+      { "name": "Inside Our Earth", "topics": ["Interior of the Earth - Crust, Mantle, Core", "Rocks and Minerals", "Types of Rocks - Igneous, Sedimentary, Metamorphic", "Rock Cycle"] },
+      { "name": "On Equality", "topics": ["Equal Right to Vote", "Other Kinds of Equality", "Equality in Indian Democracy", "Issues of Equality in Other Democracies", "Challenge of Democracy"] },
+      { "name": "Role of the Government in Health", "topics": ["What is Health", "Healthcare in India", "Public and Private Healthcare Services", "Healthcare and Equality - Is Adequate Healthcare Available to All"] }
+    ]
+  },
+  {
+    "class": 7,
+    "subject": "English",
+    "chapters": [
+      { "name": "Three Questions", "topics": ["The King's Search for Answers", "Consulting the Hermit", "The Wounded Man", "Learning the Value of the Present Moment"] },
+      { "name": "A Gift of Chappals", "topics": ["Mridu's Visit to Rukku Manni", "The Secret Kitten", "The Beggar's Feet", "Giving Away the Music Master's Chappals", "Lalli's Music Lesson"] },
+      { "name": "Gopal and the Hilsa Fish", "topics": ["The Hilsa Fish Season", "The King's Challenge", "Gopal's Half-Shaven Face", "Gopal's Success at Court"] },
+      { "name": "The Ashes That Made Trees Bloom", "topics": ["The Kind Old Couple and their Dog", "The Greedy Neighbours", "The Dog's Spirit and the Mortar", "The Magic Ashes and the Daimio"] }
+    ]
+  },
+  {
+    "class": 7,
+    "subject": "Telugu",
+    "chapters": [
+      { "name": "అక్షరం (Aksharam)", "topics": ["రచయిత పరిచయం", "అక్షరాల ప్రాముఖ్యత", "భాషా విషయాలు"] },
+      { "name": "మాయా కంబళి", "topics": ["జానపద కథ", "నీతి బోధన", "పదజాలం"] },
+      { "name": "చదువు (Chaduvu)", "topics": ["త్రివిక్రమ కవి పరిచయం", "చదువు యొక్క విలువ", "పద్య భావాలు"] },
+      { "name": "నాయనమ్మ (Nayanamma)", "topics": ["కుటుంబ విలువలు", "వృద్ధుల పట్ల గౌరవం", "భాషా క్రీడలు"] },
+      { "name": "శతక సుధ (Sataka Sudha)", "topics": ["శతక పద్యాలు", "నైతిక విలువలు", "వ్యాకరణం"] }
+    ]
+  },
+  {
+    "class": 7,
+    "subject": "Hindi",
+    "chapters": [
+      { "name": "हम पंछी उन्मुक्त गगन के", "topics": ["शिवमंगल सिंह 'सुमन'", "कविता का अर्थ", "स्वतंत्रता का महत्व", "कठिन शब्दार्थ"] },
+      { "name": "दादी माँ", "topics": ["शिवप्रसाद सिंह का पाठ", "पारिवारिक मूल्य", "दादी माँ का वात्सल्य", "भाषा की बात"] },
+      { "name": "हिमालय की बेटियाँ", "topics": ["नागार्जुन का निबंध", "नदियों का मानवीकरण", "प्राकृतिक सौंदर्य"] },
+      { "name": "कठपुतली", "topics": ["भवानीप्रसाद मिश्र की कविता", "पराधीनता का दुःख", "स्वतंत्रता की इच्छा"] }
+    ]
+  },
+  {
+    "class": 8,
+    "subject": "Mathematics",
+    "chapters": [
+      { "name": "Rational Numbers", "topics": ["Properties of Rational Numbers", "Representation of Rational Numbers on the Number Line", "Rational Numbers between Two Rational Numbers"] },
+      { "name": "Linear Equations in One Variable", "topics": ["Solving Equations which have Linear Expressions on one side", "Some Applications", "Solving Equations having the Variable on both sides", "Reducing Equations to Simpler Form"] },
+      { "name": "Understanding Quadrilaterals", "topics": ["Polygons - Classification and Diagonal Concept", "Angle Sum Property", "Sum of the Measure of the Exterior Angles of a Polygon", "Kinds of Quadrilaterals - Trapezium, Kite, Parallelogram", "Properties of a Parallelogram"] },
+      { "name": "Data Handling", "topics": ["Looking for Information", "Organising Data", "Grouping Data - Frequency Distribution", "Bars with a Difference - Histogram", "Circle Graph or Pie Chart", "Chance and Probability"] },
+      { "name": "Squares and Square Roots", "topics": ["Properties of Square Numbers", "Some More Interesting Patterns", "Finding the Square of a Number", "Square Roots", "Square Roots of Decimals", "Estimating Square Root"] },
+      { "name": "Cubes and Cube Roots", "topics": ["Introduction to Cubes", "Some Interesting Patterns", "Smallest Multiple that is a Perfect Cube", "Cube Roots", "Cube Root of a Cube Number"] },
+      { "name": "Comparing Quantities", "topics": ["Recalling Ratios and Percentages", "Finding the Increase or Decrease Percent", "Finding Discounts", "Prices Related to Buying and Selling (Profit and Loss)", "Sales Tax/Value Added Tax/Goods and Services Tax", "Compound Interest", "Deducing a Formula for Compound Interest", "Applications of Compound Interest Formula"] },
+      { "name": "Algebraic Expressions and Identities", "topics": ["What are Expressions", "Terms, Factors, and Coefficients", "Monomials, Binomials, and Polynomials", "Like and Unlike Terms", "Addition and Subtraction of Algebraic Expressions", "Multiplication of Algebraic Expressions", "What is an Identity", "Standard Identities and their Applications"] }
+    ]
+  },
+  {
+    "class": 8,
+    "subject": "Science",
+    "chapters": [
+      { "name": "Crop Production and Management", "topics": ["Agricultural Practices", "Basic Practices of Crop Production", "Preparation of Soil and Sowing", "Adding Manure and Fertilisers", "Irrigation Methods", "Protection from Weeds", "Harvesting and Storage"] },
+      { "name": "Microorganisms: Friend and Foe", "topics": ["Where do Microorganisms Live", "Friendly Microorganisms", "Harmful Microorganisms", "Food Preservation", "Nitrogen Fixation and Nitrogen Cycle"] },
+      { "name": "Coal and Petroleum", "topics": ["Natural Resources", "Coal and its Products (Coke, Coal Tar, Coal Gas)", "Petroleum Refining", "Natural Gas", "Limited Resources Conservation"] },
+      { "name": "Combustion and Flame", "topics": ["What is Combustion", "How Do We Control Fire", "Types of Combustion", "Flame Structure", "Fuel Efficiency and Harmful Effects of Burning Fuels"] },
+      { "name": "Conservation of Plants and Animals", "topics": ["Deforestation and its Causes", "Consequences of Deforestation", "Conservation of Forest and Wildlife", "Biosphere Reserve, National Parks, and Wildlife Sanctuaries", "Flora and Fauna", "Endemic Species", "Red Data Book and Migration"] },
+      { "name": "Cell — Structure and Functions", "topics": ["Discovery of the Cell", "The Cell - Organisms Show Variety in Cell Number, Shape, and Size", "Cell Structure and Function", "Parts of the Cell - Cell Membrane, Cytoplasm, Nucleus", "Comparison of Plant and Animal Cells"] },
+      { "name": "Reproduction in Animals", "topics": ["Modes of Reproduction", "Sexual Reproduction - Male and Female Reproductive Organs", "Fertilisation - Internal and External", "Development of Embryo", "Viviparous and Oviparous Animals", "Asexual Reproduction - Budding and Binary Fission"] },
+      { "name": "Reaching the Age of Adolescence", "topics": ["Adolescence and Puberty", "Changes at Puberty - Increase in Height, Body Shape, Voice Change", "Secondary Sexual Characters", "Role of Hormones in Initiating Reproductive Function", "Reproductive Phase of Life in Humans", "How is the Sex of the Baby Determined", "Hormones other than Sex Hormones"] },
+      { "name": "Force and Pressure", "topics": ["Force - A Push or a Pull", "Forces are due to an Interaction", "Exploring Forces", "A Force Can Change the State of Motion", "Force Can Change the Shape of an Object", "Contact Forces - Muscular and Friction", "Non-contact Forces - Magnetic, Electrostatic, and Gravitational", "Pressure - Pressure Exerted by Liquids and Gases, Atmospheric Pressure"] }
+    ]
+  },
+  {
+    "class": 8,
+    "subject": "Social Studies",
+    "chapters": [
+      { "name": "How, When and Where", "topics": ["How Important are Dates", "Which Dates", "How do we Know", "What Official Records do not Tell"] },
+      { "name": "From Trade to Territory", "topics": ["East India Company Comes East", "Company Rule Expands", "Setting up a New Administration", "The Company Army"] },
+      { "name": "Ruling the Countryside", "topics": ["The Company Becomes the Diwan", "Revenue for the Company", "The Need to Improve Agriculture", "A New System is Devised - Mahalwari and Ryotwari", "Crops for Europe - The Indigo Rebellion"] },
+      { "name": "Resources", "topics": ["Types of Resources - Natural, Human Made, and Human Resources", "Conserving Resources", "Sustainable Development"] },
+      { "name": "Land, Soil, Water, Natural Vegetation", "topics": ["Land Use and Conservation", "Soil Formation, Degradation, and Conservation", "Water Problems and Conservation of Water Resources", "Natural Vegetation and Wildlife - Distribution and Conservation"] },
+      { "name": "The Indian Constitution", "topics": ["Why Does a Country Need a Constitution", "The Indian Constitution: Key Features - Federalism, Parliamentary Form, Separation of Powers, Fundamental Rights, Secularism"] }
+    ]
+  },
+  {
+    "class": 8,
+    "subject": "English",
+    "chapters": [
+      { "name": "The Best Christmas Present in the World", "topics": ["The Desk in the Junk Shop", "Connie's Letter", "The Christmas Truce of 1914", "Returning the Letter to Connie"] },
+      { "name": "The Tsunami", "topics": ["Stories of Survival from Andaman and Nicobar", "Tilly Smith's Warning in Thailand", "Animal Instincts during Natural Disasters"] },
+      { "name": "Glimpses of the Past", "topics": ["Martyrs", "The Company's Conquests", "British Rule and Social Reforms", "The Spark of 1857 Rebellion"] },
+      { "name": "Bepin Choudhury's Lapse of Memory", "topics": ["Meeting at the Book Shop", "The Ranchi Trip Mystery", "Bepin's Confusion and Medical Advice", "Chunilal's Revenge Letter"] }
+    ]
+  },
+  {
+    "class": 8,
+    "subject": "Telugu",
+    "chapters": [
+      { "name": "త్యాగనిరతి (Thyaganirathi)", "topics": ["నన్నయ కవితా వైశిష్ట్యం", "శిబి చక్రవర్తి కథ", "వ్యాకరణ విశేషాలు"] },
+      { "name": "సముద్ర ప్రయాణం (Samudra Prayanam)", "topics": ["ముద్దు రామకృష్ణయ్య", "విదేశీ ప్రయాణ అనుభవాలు", "భాషా క్రీడలు"] },
+      { "name": "బండారి బసవన్న (Bandari Basavanna)", "topics": ["ద్విపద కావ్యం", "భక్తి తత్పరత", "వ్యాకరణ అంశాలు"] },
+      { "name": "అసాధారణులు (Asadharanulu)", "topics": ["శ్రమ శక్తి విలువ", "సమాజ సేవకులు", "పదజాలం"] },
+      { "name": "శతక సౌరభం (Sataka Sourabham)", "topics": ["నైతిక పద్యాలు", "సామాజిక స్పృహ", "భాషాంశాలు"] }
+    ]
+  },
+  {
+    "class": 8,
+    "subject": "Hindi",
+    "chapters": [
+      { "name": "ध्वनि", "topics": ["सूर्यकांत त्रिपाठी 'निराला'", "कविता की व्याख्या", "पर्यायवाची शब्द", "वसंत ऋतु का आगमन"] },
+      { "name": "लाख की चूड़ियाँ", "topics": ["कामतानाथ की कहानी", "बदलू का चरित्र", "कुटीर उद्योग का ह्रास", "भाषा की बात"] },
+      { "name": "बस की यात्रा", "topics": ["हरिशंकर परसाई का व्यंग्य", "यातायात व्यवस्था पर चोट", "हास्य तत्व"] },
+      { "name": "दीवानों की हस्ती", "topics": ["भगवतीचरण वर्मा की कविता", "मस्तमौला जीवन", "कठिन शब्दार्थ"] }
+    ]
+  },
+  {
+    "class": 9,
+    "subject": "Mathematics",
+    "chapters": [
+      { "name": "Number Systems", "topics": ["Irrational Numbers", "Real Numbers and their Decimal Expansions", "Representing Real Numbers on the Number Line", "Operations on Real Numbers", "Laws of Exponents for Real Numbers"] },
+      { "name": "Polynomials", "topics": ["Polynomials in One Variable", "Zeroes of a Polynomial", "Remainder Theorem", "Factorisation of Polynomials", "Algebraic Identities"] },
+      { "name": "Coordinate Geometry", "topics": ["Cartesian System", "Plotting a Point in the Plane if its Coordinates are Given"] },
+      { "name": "Linear Equations in Two Variables", "topics": ["Linear Equations", "Solution of a Linear Equation", "Graph of a Linear Equation in Two Variables", "Equations of Lines Parallel to x-axis and y-axis"] },
+      { "name": "Lines and Angles", "topics": ["Basic Terms and Definitions", "Intersecting Lines and Non-intersecting Lines", "Pairs of Angles", "Parallel Lines and a Transversal", "Lines Parallel to the Same Line", "Angle Sum Property of a Triangle"] },
+      { "name": "Triangles", "topics": ["Congruence of Triangles", "Criteria for Congruence of Triangles", "Some Properties of a Triangle", "Some More Criteria for Congruence of Triangles", "Inequalities in a Triangle"] },
+      { "name": "Quadrilaterals", "topics": ["Properties of a Parallelogram", "Another Condition for a Quadrilateral to be a Parallelogram", "The Mid-point Theorem"] }
+    ]
+  },
+  {
+    "class": 9,
+    "subject": "Science",
+    "chapters": [
+      { "name": "Matter in Our Surroundings", "topics": ["Physical Nature of Matter", "Characteristics of Particles of Matter", "States of Matter (Solid, Liquid, Gas)", "Can Matter Change its State", "Evaporation Factors"] },
+      { "name": "Is Matter Around Us Pure", "topics": ["What is a Mixture", "What is a Solution, Suspension, and Colloidal Solution", "Separating Components of a Mixture", "Physical and Chemical Changes", "Types of Pure Substances"] },
+      { "name": "Atoms and Molecules", "topics": ["Laws of Chemical Combination", "What is an Atom", "What is a Molecule", "Writing Chemical Formulae", "Molecular Mass and Mole Concept"] },
+      { "name": "Structure of the Atom", "topics": ["Charged Particles in Matter", "Structure of an Atom - Thomson, Rutherford, and Bohr Models", "Neutrons", "How are Electrons Distributed in Different Orbits", "Valency", "Atomic Number and Mass Number", "Isotopes and Isobars"] },
+      { "name": "The Fundamental Unit of Life (Cell)", "topics": ["What are Living Organisms Made of", "Structure of Cell - Plasma Membrane, Cell Wall, Nucleus, Cytoplasm", "Cell Organelles - Endoplasmic Reticulum, Golgi Apparatus, Lysosomes, Mitochondria, Plastids, Vacuoles"] },
+      { "name": "Tissues", "topics": ["Are Plants and Animals Made of Same Types of Tissues", "Plant Tissues - Meristematic and Permanent Tissues", "Animal Tissues - Epithelial, Connective, Muscular, and Nervous Tissues"] },
+      { "name": "Motion", "topics": ["Describing Motion - Motion Along a Straight Line", "Uniform and Non-uniform Motion", "Measuring the Rate of Motion - Speed with Direction", "Rate of Change of Velocity - Acceleration", "Graphical Representation of Motion", "Equations of Motion by Graphical Method", "Uniform Circular Motion"] },
+      { "name": "Force and Laws of Motion", "topics": ["Balanced and Unbalanced Forces", "First Law of Motion - Inertia and Mass", "Second Law of Motion", "Third Law of Motion", "Conservation of Momentum"] }
+    ]
+  },
+  {
+    "class": 9,
+    "subject": "Social Studies",
+    "chapters": [
+      { "name": "The French Revolution", "topics": ["French Society During the Late 18th Century", "The Outbreak of the Revolution", "France Abolishes Monarchy and Becomes a Republic", "Did Women Have a Revolution", "The Abolition of Slavery", "The Revolution and Everyday Life"] },
+      { "name": "Socialism in Europe and the Russian Revolution", "topics": ["The Age of Social Change", "The Russian Revolution", "The February Revolution in Petrograd", "What Changed after October", "The Civil War and Making a Socialist Society", "Stalinism and Collectivisation"] },
+      { "name": "India - Size and Location", "topics": ["Location of India", "Size of India", "India and the World", "India's Neighbours"] },
+      { "name": "Physical Features of India", "topics": ["Major Physiographic Divisions", "The Himalayan Mountains", "The Northern Plains", "The Peninsular Plateau", "The Indian Desert", "The Coastal Plains and The Islands"] },
+      { "name": "What is Democracy? Why Democracy?", "topics": ["What is Democracy", "Features of Democracy", "Why Democracy (Arguments for and against)", "Broader Meanings of Democracy"] }
+    ]
+  },
+  {
+    "class": 9,
+    "subject": "English",
+    "chapters": [
+      { "name": "The Fun They Had", "topics": ["Margie's Diary Entry", "Tommy's Discovery of a Real Book", "The Mechanical Teacher vs. Human Teachers", "Schools of the Past"] },
+      { "name": "The Sound of Music", "topics": ["Evelyn Glennie Listens to Sound Without Hearing It", "Bismillah Khan and the Origin of Shehnai", "Cultural Heritage of Indian Classical Music"] },
+      { "name": "The Little Girl", "topics": ["Kezia's Fear of her Father", "The Birthday Gift Incident", "Kezia's Nightmare and Realisation of Father's Love"] },
+      { "name": "A Truly Beautiful Mind", "topics": ["Albert Einstein's Childhood", "Scientific Discoveries and Special Theory of Relativity", "Einstein's Role in World Peace and Humanitarianism"] }
+    ]
+  },
+  {
+    "class": 9,
+    "subject": "Telugu",
+    "chapters": [
+      { "name": "శివతాండవం (Sivatandavam)", "topics": ["పుట్టపర్తి నారాయణాచార్యులు", "నాట్య సౌందర్యం", "అలంకారాలు", "భాషా వైశిష్ట్యం"] },
+      { "name": "పద్యభాగం (Poems)", "topics": ["ప్రాచీన కావ్య పద్యాలు", "నీతి, ధర్మ స్పృహ", "ఛందస్సు"] },
+      { "name": "గద్యభాగం (Prose)", "topics": ["ఆధునిక వచన ప్రక్రియలు", "కథానికలు, వ్యాసాలు", "పదజాల వికాసం"] }
+    ]
+  },
+  {
+    "class": 9,
+    "subject": "Hindi",
+    "chapters": [
+      { "name": "दो बैलों की कथा", "topics": ["प्रेमचंद", "हीरा और मोती का प्रेम", "परोपकार और स्वतंत्रता", "मुहावरे"] },
+      { "name": "ल्हासा की ओर", "topics": ["राहुल सांकृत्यायन", "तिब्बत की यात्रा का वर्णन", "भौगोलिक और सामाजिक स्थिति"] },
+      { "name": "उपभोक्तावाद की संस्कृति", "topics": ["श्यामाचरण दुबे", "बाज़ारवाद का प्रभाव", "बदलती जीवन शैली"] }
+    ]
+  },
+  {
+    "class": 10,
+    "subject": "Mathematics",
+    "chapters": [
+      { "name": "Real Numbers", "topics": ["Euclid’s Division Lemma", "The Fundamental Theorem of Arithmetic", "Revisiting Irrational Numbers", "Revisiting Rational Numbers and their Decimal Expansions"] },
+      { "name": "Polynomials", "topics": ["Geometrical Meaning of the Zeroes of a Polynomial", "Relationship between Zeroes and Coefficients of a Polynomial", "Division Algorithm for Polynomials"] },
+      { "name": "Pair of Linear Equations in Two Variables", "topics": ["Graphical Method of Solution of a Pair of Linear Equations", "Substitution Method", "Elimination Method", "Cross-Multiplication Method", "Equations Reducible to a Pair of Linear Equations"] },
+      { "name": "Quadratic Equations", "topics": ["Introduction to Quadratic Equations", "Solution of a Quadratic Equation by Factorisation", "Solution of a Quadratic Equation by Completing the Square", "Nature of Roots"] },
+      { "name": "Arithmetic Progressions", "topics": ["What is an AP", "nth Term of an AP", "Sum of First n Terms of an AP", "Practical Word Problems"] },
+      { "name": "Triangles", "topics": ["Similar Figures", "Similarity of Triangles", "Criteria for Similarity of Triangles", "Areas of Similar Triangles", "Pythagoras Theorem"] },
+      { "name": "Coordinate Geometry", "topics": ["Distance Formula", "Section Formula", "Area of a Triangle"] },
+      { "name": "Introduction to Trigonometry", "topics": ["Trigonometric Ratios", "Trigonometric Ratios of Some Specific Angles", "Trigonometric Ratios of Complementary Angles", "Trigonometric Identities"] },
+      { "name": "Some Applications of Trigonometry", "topics": ["Heights and Distances", "Line of Sight, Angle of Elevation, Angle of Depression"] },
+      { "name": "Circles", "topics": ["Tangent to a Circle", "Number of Tangents from a Point on a Circle"] }
+    ]
+  },
+  {
+    "class": 10,
+    "subject": "Science",
+    "chapters": [
+      { "name": "Chemical Reactions and Equations", "topics": ["Chemical Equations", "Writing a Chemical Equation", "Balanced Chemical Equations", "Types of Chemical Reactions", "Oxidation and Reduction", "Corrosion and Rancidity"] },
+      { "name": "Acids, Bases and Salts", "topics": ["Chemical Properties of Acids and Bases", "Common Properties of Acids and Bases", "How Strong are Acid or Base Solutions (pH Scale)", "Importance of pH in Everyday Life", "More about Salts"] },
+      { "name": "Metals and Non-metals", "topics": ["Physical Properties of Metals and Non-metals", "Chemical Properties of Metals", "How do Metals and Non-metals React", "Occurrence of Metals and Extraction", "Refining of Metals", "Prevention of Corrosion"] },
+      { "name": "Carbon and its Compounds", "topics": ["Bonding in Carbon - The Covalent Bond", "Versatile Nature of Carbon", "Saturated and Unsaturated Carbon Compounds", "Homologous Series", "Nomenclature of Carbon Compounds", "Chemical Properties of Carbon Compounds", "Ethanol and Ethanoic Acid", "Soaps and Detergents"] },
+      { "name": "Life Processes", "topics": ["What are Life Processes", "Autotrophic and Heterotrophic Nutrition", "Nutrition in Human Beings", "Respiration", "Transportation in Human Beings and Plants", "Excretion in Human Beings and Plants"] },
+      { "name": "Control and Coordination", "topics": ["Animals - Nervous System", "Reflex Actions", "Human Brain - Forebrain, Midbrain, Hindbrain", "How are these Tissues Protected", "How does the Nervous Tissue Cause Action", "Coordination in Plants - Immediate Response to Stimulus", "Hormones in Animals - Endocrine Glands"] },
+      { "name": "How do Organisms Reproduce?", "topics": ["Do Organisms Create Exact Copies of Themselves", "Importance of Variation", "Modes of Reproduction Used by Single Organisms - Fission, Fragmentation, Regeneration, Budding, Vegetative Propagation, Spore Formation", "Sexual Reproduction - In Flowering Plants and Human Beings", "Reproductive Health"] },
+      { "name": "Heredity and Evolution", "topics": ["Accumulation of Variation during Reproduction", "Heredity - Inherited Traits", "Rules for the Inheritance of Traits - Mendel's Contributions", "How do these Traits get Expressed", "Sex Determination", "Evolution - Acquired and Inherited Traits", "Speciation", "Evolution and Classification"] }
+    ]
+  },
+  {
+    "class": 10,
+    "subject": "Social Studies",
+    "chapters": [
+      { "name": "The Rise of Nationalism in Europe", "topics": ["The French Revolution and the Idea of the Nation", "The Making of Nationalism in Europe", "The Age of Revolutions: 1830-1848", "The Making of Germany and Italy", "Visualising the Nation", "Nationalism and Imperialism"] },
+      { "name": "Nationalism in India", "topics": ["The First World War, Khilafat, and Non-Cooperation", "Differing Strands within the Movement", "Towards Civil Disobedience - The Salt March", "The Sense of Collective Belonging"] },
+      { "name": "Resources and Development", "topics": ["Types of Resources", "Development of Resources", "Resource Planning in India", "Land Resources and Land Use Pattern", "Land Degradation and Conservation Measures", "Soil as a Resource - Classification of Soils"] },
+      { "name": "Power Sharing", "topics": ["Case Studies of Belgium and Sri Lanka", "Why Power Sharing is Desirable", "Forms of Power Sharing - Horizontal, Vertical, and Community Power Sharing"] },
+      { "name": "Federalism", "topics": ["What is Federalism", "What Makes India a Federal Country", "How is Federalism Practised", "Decentralisation in India"] }
+    ]
+  },
+  {
+    "class": 10,
+    "subject": "English",
+    "chapters": [
+      { "name": "A Letter to God", "topics": ["Lencho's Crop and the Hailstorm", "Writing the Letter to God", "The Postmaster's Generosity", "Lencho's Reaction and Second Letter"] },
+      { "name": "Nelson Mandela: Long Walk to Freedom", "topics": ["The Inauguration Ceremony", "Mandela's Speech on Freedom and Equality", "The Twin Obligations of Man", "The Struggle Against Apartheid"] },
+      { "name": "Two Stories about Flying", "topics": ["His First Flight - The Young Seagull's Fear", "The Black Aeroplane - Mysterious Pilot in the Storm"] },
+      { "name": "From the Diary of Anne Frank", "topics": ["Anne's Need for a Diary (Kitty)", "Family Background and Hiding in Amsterdam", "Anne's Essay on being a Chatterbox"] }
+    ]
+  },
+  {
+    "class": 10,
+    "subject": "Telugu",
+    "chapters": [
+      { "name": "మాతృభావన (Matrubhavana)", "topics": ["కవి పరిచయం (గడియారం రామకృష్ణ శర్మ)", "పద్యాల భావాలు", "వ్యాకరణ విశేషాలు", "స్త్రీల పట్ల గౌరవం"] },
+      { "name": "జానపదుని జాబు (Janapaduni Jaabu)", "topics": ["బోయి భీమన్న", "పల్లెటూరి జీవితం", "రైతు కష్టాలు"] },
+      { "name": "ధన్యజీవులు (Dhanyajeevulu)", "topics": ["సత్ప్రవర్తన గల వ్యక్తుల కథ", "నీతి పాఠం", "పదజాలం"] },
+      { "name": "శతక మధురిమ (Sataka Madhurima)", "topics": ["శతక పద్యాల బోధన", "నైతిక వికాసం", "వ్యాకరణం"] }
+    ]
+  },
+  {
+    "class": 10,
+    "subject": "Hindi",
+    "chapters": [
+      { "name": "सूरदास के पद", "topics": ["भ्रमरगीत", "गोपियों और उद्धव का संवाद", "भक्ति काल की विशेषताएँ", "सगुण और निर्गुण भक्ति"] },
+      { "name": "राम-लक्ष्मण-परशुराम संवाद", "topics": ["तुलसीदास", "रामचरितमानस का अंश", "लक्ष्मण और परशुराम की वार्ता", "वीर रस"] },
+      { "name": "उत्साह और अट नहीं रही है", "topics": ["सूर्यकांत त्रिपाठी 'निराला'", "बादलों का आह्वान", "फागुन का सौंदर्य"] }
+    ]
+  }
+]

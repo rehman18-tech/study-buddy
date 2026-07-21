@@ -11,6 +11,14 @@ const JWT_SECRET = process.env.JWT_SECRET || 'studybuddy_super_secret_key';
 
 // Middleware
 app.use(cors());
+app.use((req, res, next) => {
+  // Disable caching for all API responses to prevent stale data
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, private');
+  res.on('finish', () => {
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url} - Status: ${res.statusCode}`);
+  });
+  next();
+});
 app.use(express.json());
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
@@ -36,6 +44,7 @@ const verifyFirebaseToken = async (token) => {
 };
 
 // Global Auth Middleware
+// Global Auth Middleware
 const authMiddleware = async (req, res, next) => {
   const token = req.headers['authorization']?.split(' ')[1];
   if (!token) {
@@ -43,7 +52,34 @@ const authMiddleware = async (req, res, next) => {
   }
 
   // Support Demo Mode token bypass
-  if (token === 'demo_student_token_bypass' || token === 'demo_parent_token_bypass') {
+  if (token === 'demo_student_token_bypass' || token === 'demo_parent_token_bypass' || token === 'demo_teacher_token_bypass') {
+    if (token === 'demo_teacher_token_bypass') {
+      try {
+        let demoTeacher = await db.findTeacherByEmail('teacher@studybuddy.com');
+        if (!demoTeacher) {
+          demoTeacher = await db.createTeacher({
+            name: 'Dr. Ravi Kumar',
+            email: 'teacher@studybuddy.com',
+            password: bcrypt.hashSync('teacher123', 10),
+            phone: '+919876543210',
+            country: 'India',
+            qualification: 'M.Sc Biology, B.Ed',
+            specialization: 'Biology',
+            institution: 'Andhra Pradesh Model School',
+            role: 'teacher',
+            status: 'approved',
+            approvedBy: 'System Admin'
+          });
+        }
+        req.user = demoTeacher;
+        req.teacher = demoTeacher;
+        return next();
+      } catch (err) {
+        console.error("Error setting up demo teacher bypass in database:", err);
+        return res.status(500).json({ message: 'Internal server error during demo setup.' });
+      }
+    }
+
     const isStudent = token === 'demo_student_token_bypass';
     const email = isStudent ? 'alex@studybuddy.com' : 'parent@studybuddy.com';
     try {
@@ -51,7 +87,7 @@ const authMiddleware = async (req, res, next) => {
       if (!demoUser) {
         const hashedPassword = await bcrypt.hash('demopass123', 10);
         demoUser = await db.createUser({
-          name: isStudent ? 'Alex Rider' : 'Parent of Alex',
+          name: isStudent ? 'MD. IBADUR REHMAN' : 'Parent of Alex',
           email: email,
           password: hashedPassword,
           role: isStudent ? 'student' : 'parent',
@@ -85,6 +121,7 @@ const authMiddleware = async (req, res, next) => {
         });
       }
       req.user = demoUser;
+      req.teacher = demoUser;
       return next();
     } catch (err) {
       console.error("Error setting up demo user bypass in database:", err);
@@ -101,6 +138,7 @@ const authMiddleware = async (req, res, next) => {
         return res.status(401).json({ message: 'User profile not found. Please sync your details.' });
       }
       req.user = user;
+      req.teacher = user;
       return next();
     }
 
@@ -111,10 +149,29 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: 'User not found in system.' });
     }
     req.user = user;
+    req.teacher = user;
     next();
   } catch (err) {
+    console.error("AuthMiddleware error:", err);
     return res.status(401).json({ message: 'Invalid or expired session token.' });
   }
+};
+
+// Permission RBAC verification helper
+const verifyPermission = (permission) => {
+  return (req, res, next) => {
+    const user = req.user || req.teacher;
+    if (!user) {
+      return res.status(401).json({ message: 'Authentication required.' });
+    }
+    if (user.role === 'super_admin') {
+      return next();
+    }
+    if (user.permissions && user.permissions.includes(permission)) {
+      return next();
+    }
+    return res.status(403).json({ message: `Access denied. Requires '${permission}' permission.` });
+  };
 };
 
 // --- AUTH ROUTER ---
@@ -128,11 +185,31 @@ authRouter.post('/sync', async (req, res) => {
 
   try {
     let email, name;
+    let user;
     
-    if (token === 'demo_student_token_bypass' || token === 'demo_parent_token_bypass') {
+    if (token === 'demo_teacher_token_bypass') {
+      user = await db.findTeacherByEmail('teacher@studybuddy.com');
+      if (!user) {
+        user = await db.createTeacher({
+          name: 'Dr. Ravi Kumar',
+          email: 'teacher@studybuddy.com',
+          password: bcrypt.hashSync('teacher123', 10),
+          phone: '+919876543210',
+          country: 'India',
+          qualification: 'M.Sc Biology, B.Ed',
+          specialization: 'Biology',
+          institution: 'Andhra Pradesh Model School',
+          role: 'teacher',
+          status: 'approved',
+          approvedBy: 'System Admin'
+        });
+      }
+      email = user.email;
+      name = user.name;
+    } else if (token === 'demo_student_token_bypass' || token === 'demo_parent_token_bypass') {
       const isStudent = token === 'demo_student_token_bypass';
       email = isStudent ? 'alex@studybuddy.com' : 'parent@studybuddy.com';
-      name = isStudent ? 'Alex Rider' : 'Parent of Alex';
+      name = isStudent ? 'MD. IBADUR REHMAN' : 'Parent of Alex';
     } else {
       const decoded = await verifyFirebaseToken(token);
       if (!decoded) {
@@ -142,7 +219,9 @@ authRouter.post('/sync', async (req, res) => {
       name = decoded.name;
     }
 
-    let user = await db.findUserByEmail(email);
+    if (!user) {
+      user = await db.findUserByEmail(email);
+    }
     if (!user) {
       const { name: reqName, schoolName, schoolType, board, preferredLanguage, parentContact, studentClass, role, parentPin } = req.body;
       const hashedPassword = await bcrypt.hash('firebase_oauth_bypass', 10);
@@ -550,7 +629,11 @@ plannerRouter.get('/active/:planType', authMiddleware, async (req, res) => {
 
 plannerRouter.post('/generate', authMiddleware, async (req, res) => {
   try {
-    const result = await orchestrator.run(req.user, { message: 'Create a detailed daily study plan' });
+    const planType = req.body.planType || 'daily';
+    const result = await orchestrator.run(req.user, { 
+      message: `Create a detailed ${planType} study plan`,
+      planType
+    });
     res.json(result);
   } catch (err) {
     res.status(500).json({ message: 'Error generating study plan: ' + err.message });
@@ -634,10 +717,13 @@ const quizRouter = express.Router();
 
 quizRouter.get('/', authMiddleware, async (req, res) => {
   const cl = req.user.studentProfile?.class || 1;
+  console.log("🔍 [Quiz Route] Fetching quizzes for class:", cl, "User:", req.user?.email, "studentProfile:", req.user?.studentProfile);
   try {
     const quizzes = await db.getQuizzesByClass(cl);
+    console.log(`🔍 [Quiz Route] Found ${quizzes.length} quizzes for class ${cl}`);
     res.json(quizzes);
   } catch (err) {
+    console.error("Error fetching quizzes:", err);
     res.status(500).json({ message: 'Error fetching quizzes.' });
   }
 });
@@ -678,6 +764,17 @@ quizRouter.post('/submit', authMiddleware, async (req, res) => {
       quizId,
       score,
       xpEarned
+    });
+
+    // Save detailed quiz result
+    await db.saveQuizResult({
+      userId: req.user._id,
+      quizId,
+      subject,
+      score,
+      totalQuestions: answers ? answers.length : 5,
+      correctAnswers: Math.round((score / 100) * (answers ? answers.length : 5)),
+      answers
     });
 
     // Update Student Profile (XP, Streak, Badge checks)
@@ -727,6 +824,62 @@ quizRouter.post('/submit', authMiddleware, async (req, res) => {
     };
 
     const updatedUser = await db.updateUser(req.user._id, { studentProfile: updatedProfile });
+
+    // Save/update student learning memory metrics
+    try {
+      const memory = await db.getStudentMemory(req.user._id);
+      memory.quizHistory = memory.quizHistory || [];
+      memory.quizHistory.push({
+        quizId,
+        subject,
+        score,
+        date: new Date()
+      });
+
+      // Update weak and strong chapters/subjects dynamically
+      if (score < 60) {
+        if (subject && !memory.weakChapters.includes(subject)) {
+          memory.weakChapters.push(subject);
+        }
+        // Remove from strong
+        memory.strongChapters = memory.strongChapters.filter(x => x !== subject);
+      } else if (score >= 80) {
+        if (subject && !memory.strongChapters.includes(subject)) {
+          memory.strongChapters.push(subject);
+        }
+        // Remove from weak
+        memory.weakChapters = memory.weakChapters.filter(x => x !== subject);
+      }
+
+      // Record any incorrect answers
+      if (answers && answers.length > 0) {
+        memory.previousMistakes = memory.previousMistakes || [];
+        answers.forEach(ans => {
+          if (ans.isCorrect === false || ans.correct === false) {
+            memory.previousMistakes.push({
+              question: ans.question || 'Practice Question',
+              wrongAnswer: ans.selectedAnswer || ans.answer || '',
+              correctAnswer: ans.correctAnswer || '',
+              date: new Date()
+            });
+          }
+        });
+        // Limit size to last 20 mistakes
+        if (memory.previousMistakes.length > 20) {
+          memory.previousMistakes = memory.previousMistakes.slice(-20);
+        }
+      }
+
+      // Update learning speed based on historical performance
+      const avgScore = memory.quizHistory.reduce((sum, q) => sum + q.score, 0) / memory.quizHistory.length;
+      if (avgScore >= 80) memory.learningSpeed = 'Fast';
+      else if (avgScore <= 50) memory.learningSpeed = 'Slow';
+      else memory.learningSpeed = 'Average';
+
+      await db.saveStudentMemory(req.user._id, memory);
+    } catch (memErr) {
+      console.warn("⚠️ Failed to update student memory during quiz submission:", memErr.message);
+    }
 
     res.json({
       message: 'Quiz submitted and saved!',
@@ -1079,13 +1232,100 @@ aiRouter.post('/chat', authMiddleware, async (req, res) => {
   }
 });
 
-aiRouter.post('/translate', authMiddleware, async (req, res) => {
-  const { text, targetLanguage } = req.body;
-  if (!text) {
-    return res.status(400).json({ message: 'Text is required for translation.' });
+// Helper to translate long text via MyMemory by chunking it
+// Helper to translate text via Google Translate Free API (no key required, highly reliable)
+async function translateWithGoogleFree(text, sourceLang, targetLang) {
+  if (!text || text.trim() === '') return '';
+  try {
+    const url = `https://translate.googleapis.com/translate_a/single?client=gtx&sl=${sourceLang}&tl=${targetLang}&dt=t&q=${encodeURIComponent(text)}`;
+    const res = await fetch(url);
+    if (res.ok) {
+      const data = await res.json();
+      if (data && data[0]) {
+        return data[0].map(x => x[0] || '').join('');
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️ [Google Free Translate] Translation failed:", err.message);
   }
+  return text; // fallback to original
+}
+
+aiRouter.post('/translate', authMiddleware, async (req, res) => {
+  const { text, texts, targetLanguage } = req.body;
+  
   if (!targetLanguage) {
     return res.status(400).json({ message: 'Target language is required.' });
+  }
+
+  // Handle batch translation (array of strings)
+  if (Array.isArray(texts)) {
+    if (texts.length === 0) {
+      return res.json({ translatedTexts: [] });
+    }
+    try {
+      const { callLLM } = require('./services/llmService');
+      const systemInstruction = `You are a professional translator translating learning content for primary and high school students.
+Translate the following JSON array of strings into ${targetLanguage}.
+CRITICAL REQUIREMENTS:
+1. Translate all explanations, descriptions, and standard text to ${targetLanguage} using the correct script.
+2. Retain any markdown formatting, bullet points, asterisks (**bold**), and emojis exactly as they are.
+3. Retain any mathematical expressions or LaTeX formulas (e.g. $...$ or $$...$$) exactly as they are.
+4. Keep the exact same array length, order, and structure.
+5. Respond with ONLY the translated JSON array. Do not add any introductory or concluding sentences, comments, explanations, markdown code blocks (like \`\`\`json), or quotes. It must be parseable by JSON.parse.`;
+
+      let translatedTexts;
+      let fallbackNeeded = false;
+      try {
+        const prompt = JSON.stringify(texts);
+        const responseText = await callLLM(systemInstruction, prompt, false, true);
+        
+        // Clean up responseText in case LLM wrapped it in markdown code blocks
+        let cleanedResponse = responseText.trim();
+        if (cleanedResponse.startsWith('```')) {
+          cleanedResponse = cleanedResponse.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
+        }
+        
+        translatedTexts = JSON.parse(cleanedResponse);
+        if (!Array.isArray(translatedTexts) || translatedTexts.length !== texts.length) {
+          console.warn("⚠️ [Translation Route] LLM returned invalid array length or structure. Falling back...");
+          fallbackNeeded = true;
+        }
+      } catch (llmErr) {
+        console.warn("⚠️ [Translation Route] LLM batch translation failed, falling back to Google Free API:", llmErr.message);
+        fallbackNeeded = true;
+      }
+
+      if (fallbackNeeded) {
+        console.log("🔄 [Translation Route] LLM batch translation failed. Calling Google Free translation in parallel...");
+        try {
+          const targetLang = targetLanguage.toLowerCase() === 'telugu' ? 'te' : (targetLanguage.toLowerCase() === 'hindi' ? 'hi' : 'en');
+          
+          const promises = texts.map(async (t) => {
+            const cleanT = t || '';
+            const src = /[\u0c00-\u0c7f]/.test(cleanT) ? 'te' : (/[\u0900-\u097f]/.test(cleanT) ? 'hi' : 'en');
+            if (src !== targetLang) {
+              return await translateWithGoogleFree(cleanT, src, targetLang);
+            }
+            return cleanT;
+          });
+          translatedTexts = await Promise.all(promises);
+        } catch (googleErr) {
+          console.error("❌ [Translation Route] Google Free batch translation fallback failed:", googleErr.message);
+          translatedTexts = texts; // fallback to original
+        }
+      }
+
+      return res.json({ translatedTexts });
+    } catch (err) {
+      console.error("Batch translation error in endpoint:", err);
+      return res.status(500).json({ message: 'Failed to translate texts: ' + err.message });
+    }
+  }
+
+  // Handle single text translation
+  if (!text) {
+    return res.status(400).json({ message: 'Text or texts array is required for translation.' });
   }
   try {
     const { callLLM } = require('./services/llmService');
@@ -1100,7 +1340,7 @@ CRITICAL REQUIREMENTS:
     let translatedText;
     let fallbackNeeded = false;
     try {
-      translatedText = await callLLM(systemInstruction, text, false);
+      translatedText = await callLLM(systemInstruction, text, false, true);
       if (!translatedText || 
           translatedText === text || 
           translatedText.includes("experiencing high traffic") || 
@@ -1109,39 +1349,24 @@ CRITICAL REQUIREMENTS:
         fallbackNeeded = true;
       }
     } catch (llmErr) {
-      console.warn("⚠️ [Translation Route] LLM call failed, falling back to MyMemory API:", llmErr.message);
+      console.warn("⚠️ [Translation Route] LLM call failed, falling back to Google Free API:", llmErr.message);
       fallbackNeeded = true;
     }
 
     if (fallbackNeeded) {
-      console.log("🔄 [Translation Route] LLM returned fallback/failed. Calling MyMemory translation...");
+      console.log("🔄 [Translation Route] LLM returned fallback/failed. Calling Google Free translation...");
       try {
         const sourceLang = /[\u0c00-\u0c7f]/.test(text) ? 'te' : (/[\u0900-\u097f]/.test(text) ? 'hi' : 'en');
         const targetLang = targetLanguage.toLowerCase() === 'telugu' ? 'te' : (targetLanguage.toLowerCase() === 'hindi' ? 'hi' : 'en');
         
         if (sourceLang !== targetLang) {
-          const myMemoryUrl = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${sourceLang}|${targetLang}`;
-          const myMemoryRes = await fetch(myMemoryUrl);
-          if (myMemoryRes.ok) {
-            const myMemoryData = await myMemoryRes.json();
-            if (myMemoryData?.responseData?.translatedText) {
-              const decoded = myMemoryData.responseData.translatedText
-                .replace(/&amp;/g, '&')
-                .replace(/&lt;/g, '<')
-                .replace(/&gt;/g, '>')
-                .replace(/&quot;/g, '"')
-                .replace(/&#39;/g, "'")
-                .replace(/&#x27;/g, "'")
-                .replace(/&#x2F;/g, '/');
-              translatedText = decoded;
-              console.log(`✅ [Translation Route] Successfully translated via MyMemory: "${text.substring(0, 20)}..." -> "${translatedText.substring(0, 20)}..."`);
-            }
-          }
+          translatedText = await translateWithGoogleFree(text, sourceLang, targetLang);
+          console.log(`✅ [Translation Route] Successfully translated via Google Free API: "${text.substring(0, 20)}..."`);
         } else {
           translatedText = text;
         }
-      } catch (myMemoryErr) {
-        console.error("❌ [Translation Route] MyMemory translation fallback failed:", myMemoryErr.message);
+      } catch (googleErr) {
+        console.error("❌ [Translation Route] Google Free translation fallback failed:", googleErr.message);
         if (!translatedText) {
           translatedText = text; // safety fallback
         }
@@ -1435,7 +1660,8 @@ const teacherAuthMiddleware = async (req, res, next) => {
         name: 'Dr. Ravi Kumar',
         email: 'teacher@studybuddy.com',
         password: bcrypt.hashSync('teacher123', 10),
-        phone: '9876543210',
+        phone: '+919876543210',
+        country: 'India',
         qualification: 'M.Sc Biology, B.Ed',
         specialization: 'Biology',
         institution: 'Andhra Pradesh Model School',
@@ -1445,25 +1671,7 @@ const teacherAuthMiddleware = async (req, res, next) => {
       });
     }
     req.teacher = demoTeacher;
-    return next();
-  }
-  if (token === 'demo_admin_token_bypass') {
-    let demoAdmin = await db.findTeacherByEmail('admin@studybuddy.com');
-    if (!demoAdmin) {
-      demoAdmin = await db.createTeacher({
-        name: 'System Admin',
-        email: 'admin@studybuddy.com',
-        password: bcrypt.hashSync('adminpassword123', 10),
-        phone: '0000000000',
-        qualification: 'System Administrator',
-        specialization: 'System Management',
-        institution: 'StudyBuddy Org',
-        role: 'admin',
-        status: 'approved',
-        approvedBy: 'System'
-      });
-    }
-    req.teacher = demoAdmin;
+    req.user = demoTeacher;
     return next();
   }
 
@@ -1474,28 +1682,43 @@ const teacherAuthMiddleware = async (req, res, next) => {
       return res.status(401).json({ message: 'Teacher/Admin profile not found.' });
     }
     req.teacher = teacher;
+    req.user = teacher;
     next();
   } catch (err) {
+    console.error("TeacherAuthMiddleware error:", err);
     return res.status(401).json({ message: 'Invalid or expired session token.' });
   }
 };
 
 const approvedTeacherAuth = (req, res, next) => {
-  if (!req.teacher) {
+  const user = req.user || req.teacher;
+  if (!user) {
     return res.status(401).json({ message: 'Authentication required.' });
   }
-  if (req.teacher.status !== 'approved' && req.teacher.role !== 'admin') {
+  if (user.status !== 'approved' && user.role !== 'admin' && user.role !== 'super_admin') {
     return res.status(403).json({ message: 'Your teacher account is pending approval or has been suspended.' });
   }
   next();
 };
 
 const adminAuth = (req, res, next) => {
-  if (!req.teacher) {
+  const user = req.user || req.teacher;
+  if (!user) {
     return res.status(401).json({ message: 'Authentication required.' });
   }
-  if (req.teacher.role !== 'admin') {
+  if (user.role !== 'admin' && user.role !== 'super_admin') {
     return res.status(403).json({ message: 'Access denied. Administrator privileges required.' });
+  }
+  next();
+};
+
+const superAdminAuth = (req, res, next) => {
+  const user = req.user || req.teacher;
+  if (!user) {
+    return res.status(401).json({ message: 'Authentication required.' });
+  }
+  if (user.role !== 'super_admin') {
+    return res.status(403).json({ message: 'Access denied. Super Admin privileges required.' });
   }
   next();
 };
@@ -1505,10 +1728,16 @@ const teachersRouter = express.Router();
 
 teachersRouter.post('/register', uploadFields, async (req, res) => {
   try {
-    const { name, email, phone, qualification, specialization, institution, password } = req.body;
+    const { name, email, phone, country, qualification, specialization, institution, password } = req.body;
     
-    if (!name || !email || !phone || !qualification || !specialization || !institution || !password) {
+    if (!name || !email || !phone || !country || !qualification || !specialization || !institution || !password) {
       return res.status(400).json({ message: 'All text fields are required.' });
+    }
+
+    // Validate phone matches E.164 international format
+    const e164Regex = /^\+[1-9]\d{1,14}$/;
+    if (!e164Regex.test(phone)) {
+      return res.status(400).json({ message: 'Phone number must be in E.164 international format (e.g. +919988776655).' });
     }
 
     const existing = await db.findTeacherByEmail(email);
@@ -1530,6 +1759,7 @@ teachersRouter.post('/register', uploadFields, async (req, res) => {
       email: email.toLowerCase(),
       password: hashedPassword,
       phone,
+      country,
       qualification,
       specialization,
       institution,
@@ -1570,6 +1800,14 @@ teachersRouter.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials.' });
     }
 
+    if (teacher.status === 'pending') {
+      return res.status(403).json({ message: 'Application under review' });
+    }
+
+    if (teacher.status === 'rejected') {
+      return res.status(403).json({ message: 'Application rejected' });
+    }
+
     if (teacher.status === 'suspended') {
       return res.status(403).json({ message: 'Your account has been suspended by an administrator.' });
     }
@@ -1587,7 +1825,9 @@ teachersRouter.post('/login', async (req, res) => {
         status: teacher.status,
         qualification: teacher.qualification,
         specialization: teacher.specialization,
-        institution: teacher.institution
+        institution: teacher.institution,
+        country: teacher.country,
+        phone: teacher.phone
       }
     });
   } catch (err) {
@@ -1606,14 +1846,366 @@ teachersRouter.get('/me', teacherAuthMiddleware, (req, res) => {
       status: req.teacher.status,
       qualification: req.teacher.qualification,
       specialization: req.teacher.specialization,
-      institution: req.teacher.institution
+      institution: req.teacher.institution,
+      availabilityStatus: req.teacher.availabilityStatus || 'offline',
+      soundEnabled: req.teacher.soundEnabled !== false,
+      pushEnabled: req.teacher.pushEnabled !== false,
+      emailEnabled: req.teacher.emailEnabled !== false,
+      workingHoursStart: req.teacher.workingHoursStart || '09:00',
+      workingHoursEnd: req.teacher.workingHoursEnd || '17:00',
+      dndEnabled: req.teacher.dndEnabled || false,
+      dndStart: req.teacher.dndStart || '22:00',
+      dndEnd: req.teacher.dndEnd || '07:00',
+      subjectsTaught: req.teacher.subjectsTaught || [req.teacher.specialization],
+      classesTaught: req.teacher.classesTaught || []
     }
   });
+});
+
+// Get teacher notifications/settings
+teachersRouter.get('/settings', teacherAuthMiddleware, (req, res) => {
+  res.json({
+    soundEnabled: req.teacher.soundEnabled !== false,
+    pushEnabled: req.teacher.pushEnabled !== false,
+    emailEnabled: req.teacher.emailEnabled !== false,
+    workingHoursStart: req.teacher.workingHoursStart || '09:00',
+    workingHoursEnd: req.teacher.workingHoursEnd || '17:00',
+    dndEnabled: req.teacher.dndEnabled || false,
+    dndStart: req.teacher.dndStart || '22:00',
+    dndEnd: req.teacher.dndEnd || '07:00',
+    subjectsTaught: req.teacher.subjectsTaught || [req.teacher.specialization],
+    classesTaught: req.teacher.classesTaught || [],
+    availabilityStatus: req.teacher.availabilityStatus || 'offline'
+  });
+});
+
+// Update teacher notifications/settings
+teachersRouter.post('/settings', teacherAuthMiddleware, async (req, res) => {
+  try {
+    const { 
+      soundEnabled, pushEnabled, emailEnabled, 
+      workingHoursStart, workingHoursEnd, 
+      dndEnabled, dndStart, dndEnd, 
+      subjectsTaught, classesTaught 
+    } = req.body;
+
+    const updated = await db.updateTeacher(req.teacher._id, {
+      soundEnabled: soundEnabled !== undefined ? soundEnabled : true,
+      pushEnabled: pushEnabled !== undefined ? pushEnabled : true,
+      emailEnabled: emailEnabled !== undefined ? emailEnabled : true,
+      workingHoursStart: workingHoursStart || '09:00',
+      workingHoursEnd: workingHoursEnd || '17:00',
+      dndEnabled: dndEnabled !== undefined ? dndEnabled : false,
+      dndStart: dndStart || '22:00',
+      dndEnd: dndEnd || '07:00',
+      subjectsTaught: subjectsTaught || [],
+      classesTaught: classesTaught || []
+    });
+
+    res.json({ message: 'Settings updated successfully!', settings: updated });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update settings: ' + err.message });
+  }
+});
+
+// Update teacher status
+teachersRouter.post('/status', teacherAuthMiddleware, async (req, res) => {
+  try {
+    const { status } = req.body;
+    if (!['online', 'offline', 'busy', 'away', 'in_live_session'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid availability status.' });
+    }
+    const updated = await db.updateTeacher(req.teacher._id, { availabilityStatus: status });
+
+    res.json({ message: 'Status updated!', status: updated.availabilityStatus });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to update status.' });
+  }
+});
+
+// Get teacher notifications
+teachersRouter.get('/notifications', teacherAuthMiddleware, async (req, res) => {
+  try {
+    const list = await db.getNotificationsForRecipient(req.teacher._id);
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to load notifications.' });
+  }
+});
+
+// Mark teacher notifications as read
+teachersRouter.post('/notifications/read', teacherAuthMiddleware, async (req, res) => {
+  try {
+    const { notificationIds } = req.body;
+    await db.markNotificationsAsRead(req.teacher._id, notificationIds || []);
+    res.json({ message: 'Notifications marked as read.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to mark notifications read.' });
+  }
+});
+
+// Save FCM Token
+teachersRouter.post('/fcm-token', teacherAuthMiddleware, async (req, res) => {
+  try {
+    const { fcmToken } = req.body;
+    await db.updateTeacher(req.teacher._id, { fcmToken });
+    res.json({ message: 'FCM Token saved.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to save FCM token.' });
+  }
 });
 
 // 2. Admin Router
 const adminRouter = express.Router();
 
+// GET list of admins (Super Admin only)
+adminRouter.get('/admins', teacherAuthMiddleware, superAdminAuth, async (req, res) => {
+  try {
+    const allUsers = await db.getAllUsers();
+    const admins = allUsers.filter(u => u.role === 'admin');
+    res.json(admins);
+  } catch (err) {
+    res.status(500).json({ message: 'Error retrieving admin accounts.' });
+  }
+});
+
+// POST create new Admin (Super Admin only)
+adminRouter.post('/admins', teacherAuthMiddleware, superAdminAuth, async (req, res) => {
+  const { name, email, password, permissions, department } = req.body;
+  try {
+    if (!name || !email || !password) {
+      return res.status(400).json({ message: 'Name, email, and password are required.' });
+    }
+    const existing = await db.findUserByEmail(email);
+    if (existing) {
+      return res.status(400).json({ message: 'A user with this email already exists.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const permissionSet = Array.isArray(permissions) ? permissions : [];
+    
+    // Create unified User document with role 'admin'
+    const newAdmin = await db.createUser({
+      name,
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      role: 'admin',
+      status: 'active',
+      permissions: permissionSet
+    });
+
+    // Write to AdminProfile
+    await db.createAdminProfile(newAdmin._id, req.user.email, permissionSet, department || 'General');
+
+    // Audit Log
+    await db.logAuditAction('create_admin', req.user.email, email, { permissions: permissionSet, department });
+
+    res.status(201).json({
+      message: 'Admin account created successfully!',
+      user: {
+        id: newAdmin._id,
+        name: newAdmin.name,
+        email: newAdmin.email,
+        role: newAdmin.role,
+        permissions: newAdmin.permissions
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error creating admin account: ' + err.message });
+  }
+});
+
+// POST update admin permissions (Super Admin only)
+adminRouter.post('/admins/permissions/:id', teacherAuthMiddleware, superAdminAuth, async (req, res) => {
+  const { permissions, department } = req.body;
+  try {
+    const adminUser = await db.findUserById(req.params.id);
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(404).json({ message: 'Admin account not found.' });
+    }
+
+    const permissionSet = Array.isArray(permissions) ? permissions : [];
+    await db.updateUser(req.params.id, { permissions: permissionSet });
+    await db.createAdminProfile(req.params.id, req.user.email, permissionSet, department || 'General');
+
+    // Audit Log
+    await db.logAuditAction('update_permissions', req.user.email, adminUser.email, { permissions: permissionSet });
+
+    res.json({ message: 'Permissions updated successfully!' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating permissions.' });
+  }
+});
+
+// POST toggle suspend Admin (Super Admin only)
+adminRouter.post('/admins/suspend/:id', teacherAuthMiddleware, superAdminAuth, async (req, res) => {
+  const { status } = req.body; // 'active' or 'suspended'
+  try {
+    if (!['active', 'suspended'].includes(status)) {
+      return res.status(400).json({ message: 'Invalid status value.' });
+    }
+    const adminUser = await db.findUserById(req.params.id);
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(404).json({ message: 'Admin account not found.' });
+    }
+
+    await db.updateUser(req.params.id, { status });
+
+    // Audit Log
+    await db.logAuditAction('suspend_admin', req.user.email, adminUser.email, { status });
+
+    res.json({ message: `Admin account is now ${status}.` });
+  } catch (err) {
+    res.status(500).json({ message: 'Error suspending admin account.' });
+  }
+});
+
+// DELETE Admin account (Super Admin only)
+adminRouter.delete('/admins/:id', teacherAuthMiddleware, superAdminAuth, async (req, res) => {
+  try {
+    const adminUser = await db.findUserById(req.params.id);
+    if (!adminUser || adminUser.role !== 'admin') {
+      return res.status(404).json({ message: 'Admin account not found.' });
+    }
+
+    await db.deleteUser(req.params.id);
+    await db.deleteAdminProfile(req.params.id);
+
+    // Audit Log
+    await db.logAuditAction('delete_admin', req.user.email, adminUser.email);
+
+    res.json({ message: 'Admin account deleted successfully.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting admin account.' });
+  }
+});
+
+// GET platform audit logs (Super Admin only)
+adminRouter.get('/logs', teacherAuthMiddleware, superAdminAuth, async (req, res) => {
+  try {
+    const logs = await db.getAuditLogs();
+    res.json(logs);
+  } catch (err) {
+    res.status(500).json({ message: 'Error loading audit logs.' });
+  }
+});
+
+// GET database health status (Super Admin only)
+adminRouter.get('/health', teacherAuthMiddleware, superAdminAuth, async (req, res) => {
+  try {
+    const isMock = db.isMockMode();
+    const uptime = process.uptime();
+    res.json({
+      status: 'healthy',
+      database: isMock ? 'JSON Mock database' : 'MongoDB instance',
+      uptime: `${Math.round(uptime / 60)} minutes`,
+      timestamp: new Date().toISOString()
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error checking system health.' });
+  }
+});
+
+// POST system settings / optional modules toggles (Super Admin only)
+let systemSettings = {
+  aiStudyPlanner: true,
+  quizCenter: true,
+  aiTeacherChat: true
+};
+adminRouter.post('/settings', teacherAuthMiddleware, superAdminAuth, async (req, res) => {
+  const { aiStudyPlanner, quizCenter, aiTeacherChat } = req.body;
+  try {
+    if (aiStudyPlanner !== undefined) systemSettings.aiStudyPlanner = aiStudyPlanner;
+    if (quizCenter !== undefined) systemSettings.quizCenter = quizCenter;
+    if (aiTeacherChat !== undefined) systemSettings.aiTeacherChat = aiTeacherChat;
+
+    await db.logAuditAction('update_settings', req.user.email, '', systemSettings);
+    res.json({ message: 'Platform settings updated successfully!', settings: systemSettings });
+  } catch (err) {
+    res.status(500).json({ message: 'Error updating system settings.' });
+  }
+});
+
+// GET system settings (Public / Auth)
+adminRouter.get('/settings/public', async (req, res) => {
+  res.json(systemSettings);
+});
+
+// --- Announcements endpoints ---
+// GET list of announcements
+adminRouter.get('/announcements', async (req, res) => {
+  try {
+    const announcements = await db.getAnnouncements();
+    res.json(announcements);
+  } catch (err) {
+    res.status(500).json({ message: 'Error retrieving announcements.' });
+  }
+});
+
+// POST create announcement (Admin/Super Admin)
+adminRouter.post('/announcements', teacherAuthMiddleware, adminAuth, verifyPermission('manage_content'), async (req, res) => {
+  const { title, content } = req.body;
+  try {
+    if (!title || !content) {
+      return res.status(400).json({ message: 'Title and content are required.' });
+    }
+    const ann = await db.createAnnouncement(title, content, req.user.name);
+    await db.logAuditAction('create_announcement', req.user.email, '', { title });
+    res.status(201).json({ message: 'Announcement published successfully!', announcement: ann });
+  } catch (err) {
+    res.status(500).json({ message: 'Error publishing announcement.' });
+  }
+});
+
+// DELETE announcement (Admin/Super Admin)
+adminRouter.delete('/announcements/:id', teacherAuthMiddleware, adminAuth, verifyPermission('manage_content'), async (req, res) => {
+  try {
+    await db.deleteAnnouncement(req.params.id);
+    await db.logAuditAction('delete_announcement', req.user.email, req.params.id);
+    res.json({ message: 'Announcement removed successfully.' });
+  } catch (err) {
+    res.status(500).json({ message: 'Error deleting announcement.' });
+  }
+});
+
+// --- Student Reports / Complaints endpoints ---
+// GET list of reports (Admin/Super Admin)
+adminRouter.get('/reports', teacherAuthMiddleware, adminAuth, async (req, res) => {
+  try {
+    const list = await db.getReports();
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ message: 'Error loading reports queue.' });
+  }
+});
+
+// POST resolve a report (Admin/Super Admin)
+adminRouter.post('/reports/resolve/:id', teacherAuthMiddleware, adminAuth, async (req, res) => {
+  const { status } = req.body; // 'resolved' or 'ignored'
+  try {
+    const updated = await db.updateReportStatus(req.params.id, status || 'resolved');
+    await db.logAuditAction('resolve_report', req.user.email, '', { id: req.params.id, status });
+    res.json({ message: `Report marked as ${status || 'resolved'}.`, report: updated });
+  } catch (err) {
+    res.status(500).json({ message: 'Error resolving report.' });
+  }
+});
+
+// POST report something (Students/Parents)
+adminRouter.post('/reports', authMiddleware, async (req, res) => {
+  const { type, content, targetItem } = req.body;
+  try {
+    if (!type || !content) {
+      return res.status(400).json({ message: 'Type and content are required.' });
+    }
+    const report = await db.createReport(type, content, req.user.email, targetItem);
+    res.status(201).json({ message: 'Report submitted successfully!', report });
+  } catch (err) {
+    res.status(500).json({ message: 'Error submitting report.' });
+  }
+});
+
+// GET list of teachers (Admin/Super Admin)
 adminRouter.get('/teachers', teacherAuthMiddleware, adminAuth, async (req, res) => {
   try {
     const teachers = await db.getAllTeachers();
@@ -1623,54 +2215,140 @@ adminRouter.get('/teachers', teacherAuthMiddleware, adminAuth, async (req, res) 
   }
 });
 
-adminRouter.post('/teachers/approve/:id', teacherAuthMiddleware, adminAuth, async (req, res) => {
+// POST approve teacher (Admin/Super Admin, verify_teachers check)
+adminRouter.post('/teachers/approve/:id', teacherAuthMiddleware, adminAuth, verifyPermission('verify_teachers'), async (req, res) => {
   try {
     const updated = await db.updateTeacherStatus(req.params.id, 'approved', req.teacher.name);
     if (!updated) {
       return res.status(404).json({ message: 'Teacher application not found.' });
     }
+    await db.logAuditAction('approve_teacher', req.user.email, updated.email, { id: req.params.id });
     res.json({ message: 'Teacher application approved successfully!', teacher: updated });
   } catch (err) {
     res.status(500).json({ message: 'Error approving teacher.' });
   }
 });
 
-adminRouter.post('/teachers/reject/:id', teacherAuthMiddleware, adminAuth, async (req, res) => {
+// POST reject teacher (Admin/Super Admin, verify_teachers check)
+adminRouter.post('/teachers/reject/:id', teacherAuthMiddleware, adminAuth, verifyPermission('verify_teachers'), async (req, res) => {
   try {
     const updated = await db.updateTeacherStatus(req.params.id, 'rejected', req.teacher.name);
     if (!updated) {
       return res.status(404).json({ message: 'Teacher application not found.' });
     }
+    await db.logAuditAction('reject_teacher', req.user.email, updated.email, { id: req.params.id });
     res.json({ message: 'Teacher application rejected.', teacher: updated });
   } catch (err) {
     res.status(500).json({ message: 'Error rejecting teacher.' });
   }
 });
 
-adminRouter.post('/teachers/suspend/:id', teacherAuthMiddleware, adminAuth, async (req, res) => {
+// POST suspend teacher (Admin/Super Admin, verify_teachers check)
+adminRouter.post('/teachers/suspend/:id', teacherAuthMiddleware, adminAuth, verifyPermission('verify_teachers'), async (req, res) => {
   try {
     const updated = await db.updateTeacherStatus(req.params.id, 'suspended', req.teacher.name);
     if (!updated) {
       return res.status(404).json({ message: 'Teacher not found.' });
     }
+    await db.logAuditAction('suspend_teacher', req.user.email, updated.email, { id: req.params.id });
     res.json({ message: 'Teacher account suspended.', teacher: updated });
   } catch (err) {
     res.status(500).json({ message: 'Error suspending teacher.' });
   }
 });
 
-adminRouter.delete('/teachers/:id', teacherAuthMiddleware, adminAuth, async (req, res) => {
+// DELETE Teacher application (Admin/Super Admin, manage_teachers check)
+adminRouter.delete('/teachers/:id', teacherAuthMiddleware, adminAuth, verifyPermission('manage_teachers'), async (req, res) => {
   try {
+    const teacher = await db.findTeacherById(req.params.id);
     const deleted = await db.deleteTeacher(req.params.id);
     if (!deleted) {
       return res.status(404).json({ message: 'Teacher not found.' });
     }
+    await db.logAuditAction('delete_teacher', req.user.email, teacher ? teacher.email : req.params.id);
     res.json({ message: 'Teacher application deleted successfully.' });
   } catch (err) {
     res.status(500).json({ message: 'Error deleting teacher application.' });
   }
 });
 
+// PUT update teacher details (Admin/Super Admin, manage_teachers check)
+adminRouter.put('/teachers/:id', teacherAuthMiddleware, adminAuth, verifyPermission('manage_teachers'), async (req, res) => {
+  const { name, email, phone, country, qualification, specialization, institution, status, role } = req.body;
+  try {
+    const updateData = {};
+    if (name) updateData.name = name;
+    if (email) updateData.email = email.toLowerCase();
+    if (phone) updateData.phone = phone;
+    if (country) updateData.country = country;
+    if (qualification) updateData.qualification = qualification;
+    if (specialization) updateData.specialization = specialization;
+    if (institution) updateData.institution = institution;
+    if (status) updateData.status = status;
+    if (role) updateData.role = role;
+
+    const updated = await db.updateTeacher(req.params.id, updateData);
+    if (!updated) {
+      return res.status(404).json({ message: 'Teacher not found.' });
+    }
+    await db.logAuditAction('update_teacher', req.user.email, updated.email, updateData);
+    res.json({ message: 'Teacher details updated successfully!', teacher: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error updating teacher details.' });
+  }
+});
+
+// GET list of students (Admin/Super Admin, manage_users check)
+adminRouter.get('/students', teacherAuthMiddleware, adminAuth, verifyPermission('manage_users'), async (req, res) => {
+  try {
+    const allUsers = await db.getAllUsers();
+    const students = allUsers.filter(u => u.role === 'student');
+    res.json(students);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error retrieving student profiles.' });
+  }
+});
+
+// PUT update student details (Admin/Super Admin, manage_users check)
+adminRouter.put('/students/:id', teacherAuthMiddleware, adminAuth, verifyPermission('manage_users'), async (req, res) => {
+  const { name, email, studentProfile } = req.body;
+  try {
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (email !== undefined) updateData.email = email.toLowerCase();
+    if (studentProfile !== undefined) updateData.studentProfile = studentProfile;
+
+    const updated = await db.updateUser(req.params.id, updateData);
+    if (!updated) {
+      return res.status(404).json({ message: 'Student profile not found.' });
+    }
+    await db.logAuditAction('update_student', req.user.email, updated.email, updateData);
+    res.json({ message: 'Student updated successfully!', user: updated });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error updating student profile.' });
+  }
+});
+
+// DELETE student account (Admin/Super Admin, manage_users check)
+adminRouter.delete('/students/:id', teacherAuthMiddleware, adminAuth, verifyPermission('manage_users'), async (req, res) => {
+  try {
+    const studentUser = await db.findUserById(req.params.id);
+    const deleted = await db.deleteUser(req.params.id);
+    if (!deleted) {
+      return res.status(404).json({ message: 'Student not found.' });
+    }
+    await db.logAuditAction('delete_student', req.user.email, studentUser ? studentUser.email : req.params.id);
+    res.json({ message: 'Student account deleted successfully.' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: 'Error deleting student profile.' });
+  }
+});
+
+// GET stats summary (Admin/Super Admin)
 adminRouter.get('/stats', teacherAuthMiddleware, adminAuth, async (req, res) => {
   try {
     const stats = await db.getAIAnswersStats();
@@ -1687,78 +2365,277 @@ adminRouter.get('/stats', teacherAuthMiddleware, adminAuth, async (req, res) => 
   }
 });
 
-// 3. Teacher Review Workflow Router
+// Admin manual teacher creation endpoint (Admin/Super Admin, manage_teachers check)
+adminRouter.post('/teachers/create', teacherAuthMiddleware, adminAuth, verifyPermission('manage_teachers'), async (req, res) => {
+  const { name, email, phone, country, qualification, specialization, institution, password } = req.body;
+  try {
+    if (!name || !email || !phone || !country || !qualification || !specialization || !institution || !password) {
+      return res.status(400).json({ message: 'All text fields are required.' });
+    }
+
+    const e164Regex = /^\+[1-9]\d{1,14}$/;
+    if (!e164Regex.test(phone)) {
+      return res.status(400).json({ message: 'Phone number must be in E.164 international format (e.g. +919988776655).' });
+    }
+
+    const existing = await db.findTeacherByEmail(email);
+    if (existing) {
+      return res.status(400).json({ message: 'A teacher/admin with this email already exists.' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const teacherData = {
+      name,
+      email: email.toLowerCase(),
+      password: hashedPassword,
+      phone,
+      country,
+      qualification,
+      specialization,
+      institution,
+      teacherIdProof: '', // Manual addition does not require uploaded documents
+      certificates: [],
+      role: 'teacher',
+      status: 'approved', // Pre-approved directly by the admin
+      approvedBy: req.teacher.name
+    };
+
+    const newTeacher = await db.createTeacher(teacherData);
+    await db.logAuditAction('create_teacher', req.user.email, email, { role: 'teacher' });
+    res.status(201).json({
+      message: 'Teacher account created and approved successfully!',
+      teacher: {
+        id: newTeacher._id,
+        name: newTeacher.name,
+        email: newTeacher.email,
+        role: newTeacher.role,
+        status: newTeacher.status
+      }
+    });
+  } catch (err) {
+    console.error("Direct teacher creation error:", err);
+    res.status(500).json({ message: 'Error creating teacher account: ' + err.message });
+  }
+});
+
+// POST Seed entire AP Board & CBSE syllabus (Class 6-10) in a single click
+adminRouter.post('/seed-syllabus', teacherAuthMiddleware, adminAuth, verifyPermission('manage_syllabus'), async (req, res) => {
+  try {
+    const fs = require('fs');
+    const path = require('path');
+    const syllabusPath = path.join(__dirname, 'config', 'full_syllabus.json');
+    if (!fs.existsSync(syllabusPath)) {
+      return res.status(404).json({ message: 'Syllabus definition file not found.' });
+    }
+    const rawData = fs.readFileSync(syllabusPath, 'utf8');
+    const syllabusArray = JSON.parse(rawData);
+    
+    await db.bulkInsertSyllabus(syllabusArray);
+    await db.logAuditAction('seed_full_syllabus', req.user.email, '', { count: syllabusArray.length });
+    
+    res.json({ message: 'Successfully seeded entire AP Board & CBSE syllabus (Class 6-10)!' });
+  } catch (err) {
+    console.error("Error seeding syllabus:", err);
+    res.status(500).json({ message: 'Error seeding syllabus: ' + err.message });
+  }
+});
+
+// POST Add textbook content manually or via PDF parser (Layer 1 admin upload)
+adminRouter.post('/textbook-content', teacherAuthMiddleware, adminAuth, verifyPermission('manage_syllabus'), async (req, res) => {
+  const { classNum, subjectName, chapterName, topicName, content, sourceFile, pageNumber } = req.body;
+  if (!classNum || !subjectName || !chapterName || !content) {
+    return res.status(400).json({ message: 'Class, Subject, Chapter, and Content are required.' });
+  }
+  try {
+    const newContent = await db.saveTextbookContent({
+      classNum: Number(classNum),
+      subjectName,
+      chapterName,
+      topicName: topicName || 'General',
+      content,
+      sourceFile: sourceFile || 'Uploaded Textbook Note',
+      pageNumber: pageNumber ? Number(pageNumber) : null
+    });
+    await db.logAuditAction('add_textbook_content', req.user.email, '', { classNum, subjectName, chapterName, topicName });
+    res.json({ message: 'Textbook content added successfully!', content: newContent });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to add textbook content: ' + err.message });
+  }
+});
+
+// Manual syllabus modification endpoints
+syllabusRouter.post('/add-topic', teacherAuthMiddleware, adminAuth, verifyPermission('manage_syllabus'), async (req, res) => {
+  const { classNum, subjectName, chapterName, topicName } = req.body;
+  if (!classNum || !subjectName || !chapterName || !topicName) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
+  try {
+    const topic = await db.addManualTopic(classNum, subjectName, chapterName, topicName);
+    await db.logAuditAction('add_syllabus_topic', req.user.email, '', { classNum, subjectName, chapterName, topicName });
+    res.json({ message: 'Topic added successfully!', topic });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to add topic: ' + err.message });
+  }
+});
+
+syllabusRouter.post('/delete-topic', teacherAuthMiddleware, adminAuth, verifyPermission('manage_syllabus'), async (req, res) => {
+  const { classNum, subjectName, chapterName, topicName } = req.body;
+  if (!classNum || !subjectName || !chapterName || !topicName) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
+  try {
+    await db.deleteManualTopic(classNum, subjectName, chapterName, topicName);
+    await db.logAuditAction('delete_syllabus_topic', req.user.email, '', { classNum, subjectName, chapterName, topicName });
+    res.json({ message: 'Topic deleted successfully!' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete topic: ' + err.message });
+  }
+});
+
+syllabusRouter.post('/delete-chapter', teacherAuthMiddleware, adminAuth, verifyPermission('manage_syllabus'), async (req, res) => {
+  const { classNum, subjectName, chapterName } = req.body;
+  if (!classNum || !subjectName || !chapterName) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
+  try {
+    await db.deleteManualChapter(classNum, subjectName, chapterName);
+    await db.logAuditAction('delete_syllabus_chapter', req.user.email, '', { classNum, subjectName, chapterName });
+    res.json({ message: 'Chapter deleted successfully!' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete chapter: ' + err.message });
+  }
+});
+
+syllabusRouter.post('/delete-subject', teacherAuthMiddleware, adminAuth, verifyPermission('manage_syllabus'), async (req, res) => {
+  const { classNum, subjectName } = req.body;
+  if (!classNum || !subjectName) {
+    return res.status(400).json({ message: 'All fields are required.' });
+  }
+  try {
+    await db.deleteManualSubject(classNum, subjectName);
+    await db.logAuditAction('delete_syllabus_subject', req.user.email, '', { classNum, subjectName });
+    res.json({ message: 'Subject deleted successfully!' });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to delete subject: ' + err.message });
+  }
+});
+
+// --- TEACHER REVIEW ROUTER ---
 const teacherReviewRouter = express.Router();
 
 teacherReviewRouter.get('/answers/pending', teacherAuthMiddleware, approvedTeacherAuth, async (req, res) => {
   try {
-    const list = await db.getAIAnswers({ verificationStatus: 'pending', class: req.query.class, subject: req.query.subject, search: req.query.search });
+    const filters = { verificationStatus: 'pending' };
+    if (req.query.class) filters.class = Number(req.query.class);
+    if (req.query.subject) filters.subject = req.query.subject;
+    const list = await db.getAIAnswers(filters);
     res.json(list);
   } catch (err) {
-    res.status(500).json({ message: 'Error loading pending answers.' });
+    res.status(500).json({ message: 'Error retrieving pending review queue.' });
   }
 });
 
 teacherReviewRouter.get('/answers/approved', teacherAuthMiddleware, approvedTeacherAuth, async (req, res) => {
   try {
-    const list = await db.getAIAnswers({ verificationStatus: 'approved', class: req.query.class, subject: req.query.subject, search: req.query.search });
+    const filters = { verificationStatus: 'approved' };
+    if (req.query.class) filters.class = Number(req.query.class);
+    if (req.query.subject) filters.subject = req.query.subject;
+    const list = await db.getAIAnswers(filters);
     res.json(list);
   } catch (err) {
-    res.status(500).json({ message: 'Error loading approved answers.' });
+    res.status(500).json({ message: 'Error retrieving approved answers.' });
   }
 });
 
 teacherReviewRouter.get('/answers/rejected', teacherAuthMiddleware, approvedTeacherAuth, async (req, res) => {
   try {
-    const list = await db.getAIAnswers({ verificationStatus: 'rejected', class: req.query.class, subject: req.query.subject, search: req.query.search });
+    const filters = { verificationStatus: 'rejected' };
+    if (req.query.class) filters.class = Number(req.query.class);
+    if (req.query.subject) filters.subject = req.query.subject;
+    const list = await db.getAIAnswers(filters);
     res.json(list);
   } catch (err) {
-    res.status(500).json({ message: 'Error loading rejected answers.' });
+    res.status(500).json({ message: 'Error retrieving rejected answers.' });
   }
 });
 
 teacherReviewRouter.post('/answers/review/:id', teacherAuthMiddleware, approvedTeacherAuth, async (req, res) => {
   const { action, answerText, teacherComments, sources } = req.body;
-  if (!['approve', 'edit', 'reject'].includes(action)) {
-    return res.status(400).json({ message: 'Invalid action. Must be approve, edit, or reject.' });
-  }
-
   try {
-    const answer = await db.findAIAnswerById(req.params.id);
-    if (!answer) {
-      return res.status(404).json({ message: 'AI Answer record not found.' });
+    if (!['approve', 'edit', 'reject'].includes(action)) {
+      return res.status(400).json({ message: 'Invalid action.' });
     }
 
-    let status = 'approved';
-    let finalAnswer = answer.answer;
-    if (action === 'reject') {
-      status = 'rejected';
-    } else if (action === 'edit') {
-      status = 'edited';
-      if (!answerText) {
-        return res.status(400).json({ message: 'Edited answer text is required for edit action.' });
-      }
-      finalAnswer = answerText;
-    }
+    let status = 'pending';
+    if (action === 'approve') status = 'approved';
+    if (action === 'reject') status = 'rejected';
+    if (action === 'edit') status = 'edited';
 
     const extraFields = {
-      answer: finalAnswer,
       teacherComments: teacherComments || '',
-      sources: Array.isArray(sources) ? sources : (sources ? [sources] : []),
+      sources: Array.isArray(sources) ? sources : [],
       verifiedBy: {
-        name: req.teacher.name,
-        qualification: req.teacher.qualification,
-        specialization: req.teacher.specialization,
-        institution: req.teacher.institution
+        name: req.teacher.name || 'Subject Teacher',
+        qualification: req.teacher.qualification || 'Subject Expert',
+        institution: req.teacher.institution || 'StudyBuddy'
       },
+      // Set confidence score based on action: 100 for approve/edit, 0 for reject
+      confidenceScore: (action === 'approve' || action === 'edit') ? 100 : 0,
       verifiedAt: new Date()
     };
 
+    if (action === 'edit') {
+      if (!answerText) {
+        return res.status(400).json({ message: 'Answer text is required for editing.' });
+      }
+      extraFields.answer = answerText;
+    }
+
     const updated = await db.updateAIAnswerVerification(req.params.id, status, extraFields);
-    res.json({ message: `Answer successfully verified as ${status}!`, answer: updated });
+    if (!updated) {
+      return res.status(404).json({ message: 'Answer record not found.' });
+    }
+
+    await db.logAuditAction('review_answer', req.user.email, '', { id: req.params.id, action, status });
+    res.json({ message: 'Answer reviewed successfully!', answer: updated });
   } catch (err) {
-    console.error("Error performing teacher review:", err);
     res.status(500).json({ message: 'Error reviewing answer.' });
+  }
+});
+
+// GET Retrieve pending doubts for teachers
+teacherReviewRouter.get('/doubts', teacherAuthMiddleware, approvedTeacherAuth, async (req, res) => {
+  try {
+    const filters = {};
+    if (req.query.class) filters.classNum = Number(req.query.class);
+    if (req.query.subject) filters.subject = req.query.subject;
+    const list = await db.getPendingDoubts(filters);
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ message: 'Error retrieving pending doubts: ' + err.message });
+  }
+});
+
+// POST Resolve a doubt with a teacher's explanation
+teacherReviewRouter.post('/doubts/resolve/:id', teacherAuthMiddleware, approvedTeacherAuth, async (req, res) => {
+  const { teacherAnswer } = req.body;
+  if (!teacherAnswer) {
+    return res.status(400).json({ message: 'Teacher explanation is required.' });
+  }
+  try {
+    const teacherObj = {
+      name: req.teacher.name || 'Subject Teacher',
+      qualification: req.teacher.qualification || 'Subject Expert',
+      institution: req.teacher.institution || 'StudyBuddy'
+    };
+    const updated = await db.resolveDoubt(req.params.id, teacherAnswer, teacherObj);
+    if (!updated) {
+      return res.status(404).json({ message: 'Doubt ticket not found.' });
+    }
+    await db.logAuditAction('resolve_doubt', req.user.email, '', { id: req.params.id });
+    res.json({ message: 'Doubt resolved successfully!', doubt: updated });
+  } catch (err) {
+    res.status(500).json({ message: 'Error resolving doubt: ' + err.message });
   }
 });
 
@@ -1766,7 +2643,338 @@ app.use('/api/teachers', teachersRouter);
 app.use('/api/admin', adminRouter);
 app.use('/api/teachers-review', teacherReviewRouter);
 
+// --- DOUBT / TICKET ROUTER (STUDENT-FACING) ---
+const doubtRouter = express.Router();
+
+// POST Submit a new doubt ticket
+doubtRouter.post('/', authMiddleware, async (req, res) => {
+  const { classNum, subject, question, aiAnswer } = req.body;
+  if (!classNum || !subject || !question || !aiAnswer) {
+    return res.status(400).json({ message: 'Class, Subject, Question, and AI Answer are required.' });
+  }
+  try {
+    const newDoubt = await db.createDoubt({
+      studentId: req.user._id || req.user.uid,
+      studentName: req.user.name || 'Student',
+      classNum: Number(classNum),
+      subject,
+      question,
+      aiAnswer,
+      status: 'pending'
+    });
+    res.json({ message: 'Doubt ticket created successfully!', doubt: newDoubt });
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to create doubt ticket: ' + err.message });
+  }
+});
+
+// GET Get doubts for the logged-in student
+doubtRouter.get('/', authMiddleware, async (req, res) => {
+  try {
+    const studentId = req.user._id || req.user.uid;
+    const list = await db.getDoubtsByStudent(studentId);
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to retrieve doubts: ' + err.message });
+  }
+});
+
+// GET Get status of a specific doubt ticket
+doubtRouter.get('/status/:id', authMiddleware, async (req, res) => {
+  try {
+    let doubt;
+    if (db.isMockMode()) {
+      // In mock mode, require the module dynamically or use it directly if available
+      const fs = require('fs');
+      const path = require('path');
+      const mockDbPath = path.join(__dirname, 'data', 'mock_db.json');
+      if (fs.existsSync(mockDbPath)) {
+        const raw = fs.readFileSync(mockDbPath, 'utf8');
+        const mockDb = JSON.parse(raw);
+        const doubts = mockDb.doubts || [];
+        doubt = doubts.find(d => d._id === req.params.id);
+      }
+    } else {
+      const mongoose = require('mongoose');
+      const DoubtModel = mongoose.model('Doubt');
+      doubt = await DoubtModel.findById(req.params.id);
+    }
+    
+    if (!doubt) return res.status(404).json({ message: 'Doubt ticket not found.' });
+    res.json(doubt);
+  } catch (err) {
+    res.status(500).json({ message: 'Error retrieving doubt status: ' + err.message });
+  }
+});
+
+app.use('/api/doubts', doubtRouter);
+
+// Public answer status polling endpoint — used by student chat to auto-update verified answers
+app.get('/api/answers/status/:id', authMiddleware, async (req, res) => {
+  try {
+    const answer = await db.findAIAnswerById(req.params.id);
+    if (!answer) return res.status(404).json({ message: 'Answer not found.' });
+    // Return only the fields needed for the student UI update
+    res.json({
+      _id: answer._id,
+      verificationStatus: answer.verificationStatus,
+      confidenceScore: answer.confidenceScore,
+      isVerified: ['approved', 'edited'].includes(answer.verificationStatus),
+      verifiedBy: answer.verifiedBy || null,
+      verifiedAt: answer.verifiedAt || null,
+      teacherComments: answer.teacherComments || '',
+      answer: answer.answer,
+      isSyllabusRelated: answer.isSyllabusRelated !== false,
+      sources: answer.sources || []
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error fetching answer status.' });
+  }
+});
+
+// --- TEACHER SUPPORT SYSTEM: TICKETS ROUTER ---
+const ticketsRouter = express.Router();
+
+// 1. Create a support ticket (Student only)
+ticketsRouter.post('/', authMiddleware, async (req, res) => {
+  try {
+    const { question, aiAnswer, supportType, subject, classNum } = req.body;
+    if (!question || !aiAnswer || !supportType) {
+      return res.status(400).json({ message: 'Question, AI Answer, and Support Type are required.' });
+    }
+    const ticket = await db.createSupportTicket({
+      studentId: req.user._id,
+      studentName: req.user.name,
+      classNum: classNum || req.user.studentProfile?.classNum || 10,
+      subject: subject || 'General',
+      question,
+      aiAnswer,
+      supportType
+    });
+
+    // Trigger real-time routing alert for verified teachers
+    try {
+      const socketService = require('./services/socketService');
+      socketService.routeDoubtRequest({
+        ticketId: ticket._id,
+        studentId: req.user._id,
+        studentName: req.user.name,
+        classNum: ticket.classNum,
+        subject: ticket.subject,
+        question: ticket.question,
+        aiAnswer: ticket.aiAnswer,
+        timeRaised: ticket.createdAt
+      });
+    } catch (sockErr) {
+      console.warn("⚠️ Failed to trigger real-time routing alert:", sockErr.message);
+    }
+
+    res.status(201).json(ticket);
+  } catch (err) {
+    console.error("Error creating support ticket:", err);
+    res.status(500).json({ message: 'Failed to create support ticket: ' + err.message });
+  }
+});
+
+// 2. Get student's own tickets (Student only)
+ticketsRouter.get('/student', authMiddleware, async (req, res) => {
+  try {
+    const tickets = await db.getStudentTickets(req.user._id);
+    res.json(tickets);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch student support tickets.' });
+  }
+});
+
+// 3. Get pending tickets (Teacher/Admin only)
+ticketsRouter.get('/pending', authMiddleware, async (req, res) => {
+  try {
+    if (!['teacher', 'admin', 'super_admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied. Only teachers/admins can view pending tickets.' });
+    }
+    const tickets = await db.getPendingTickets();
+    res.json(tickets);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch pending support tickets.' });
+  }
+});
+
+// 4. Get active tickets for the logged-in teacher (Teacher/Admin only)
+ticketsRouter.get('/active', authMiddleware, async (req, res) => {
+  try {
+    if (!['teacher', 'admin', 'super_admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+    const tickets = await db.getTeacherActiveTickets(req.user._id);
+    res.json(tickets);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch active support tickets.' });
+  }
+});
+
+// 5. Get completed tickets for the logged-in teacher (Teacher/Admin only)
+ticketsRouter.get('/completed', authMiddleware, async (req, res) => {
+  try {
+    if (!['teacher', 'admin', 'super_admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+    const tickets = await db.getTeacherCompletedTickets(req.user._id);
+    res.json(tickets);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to fetch completed support tickets.' });
+  }
+});
+
+// 6. Accept a support ticket (Teacher/Admin only)
+ticketsRouter.post('/:id/accept', authMiddleware, async (req, res) => {
+  try {
+    if (!['teacher', 'admin', 'super_admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+    const ticket = await db.acceptSupportTicket(req.params.id, req.user._id, req.user.name);
+    if (!ticket) {
+      return res.status(404).json({ message: 'Support ticket not found.' });
+    }
+
+    try {
+      const socketService = require('./services/socketService');
+      socketService.notifyStudentDoubtAssigned(ticket, req.user);
+    } catch (sockErr) {
+      console.warn("⚠️ Failed to trigger socket notification on HTTP accept:", sockErr.message);
+    }
+
+    res.json(ticket);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to accept support ticket: ' + err.message });
+  }
+});
+
+// 7. Resolve a support ticket (Teacher/Admin only)
+ticketsRouter.post('/:id/resolve', authMiddleware, async (req, res) => {
+  try {
+    if (!['teacher', 'admin', 'super_admin'].includes(req.user.role)) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+    const { teacherAnswer, whiteboardImage } = req.body;
+    const ticket = await db.resolveSupportTicket(req.params.id, teacherAnswer, whiteboardImage);
+    if (!ticket) {
+      return res.status(404).json({ message: 'Support ticket not found.' });
+    }
+    res.json(ticket);
+  } catch (err) {
+    res.status(500).json({ message: 'Failed to resolve support ticket: ' + err.message });
+  }
+});
+
+// 8. Get status of a specific ticket (polling endpoint for student chat)
+ticketsRouter.get('/:id/status', authMiddleware, async (req, res) => {
+  try {
+    const ticket = await db.getTicketById(req.params.id);
+    if (!ticket) return res.status(404).json({ message: 'Support ticket not found.' });
+    res.json(ticket);
+  } catch (err) {
+    res.status(500).json({ message: 'Error retrieving ticket status.' });
+  }
+});
+
+// 9. Delete a support ticket (Student only)
+ticketsRouter.delete('/:id', authMiddleware, async (req, res) => {
+  try {
+    const ticket = await db.getTicketById(req.params.id);
+    if (!ticket) {
+      return res.status(404).json({ message: 'Support ticket not found.' });
+    }
+    const studentId = req.user._id || req.user.uid;
+    if (!studentId || ticket.studentId.toString() !== studentId.toString()) {
+      return res.status(403).json({ message: 'Access denied. You can only delete your own support tickets.' });
+    }
+    
+    // Clean up socket routing/escalation/assignments
+    try {
+      const socketService = require('./services/socketService');
+      socketService.cancelDoubtRequest(req.params.id, ticket.assignedTeacher);
+    } catch (sockErr) {
+      console.warn("⚠️ Failed to cancel doubt request in socketService:", sockErr.message);
+    }
+
+    // Delete the notifications
+    await db.deleteNotificationsForTicket(req.params.id);
+
+    // Delete the ticket itself
+    await db.deleteSupportTicket(req.params.id);
+
+    res.json({ message: 'Support ticket deleted successfully.' });
+  } catch (err) {
+    console.error("Error deleting support ticket:", err);
+    res.status(500).json({ message: 'Failed to delete support ticket: ' + err.message });
+  }
+});
+
+// 10. Bulk delete support tickets (Student only)
+ticketsRouter.post('/delete-bulk', authMiddleware, async (req, res) => {
+  try {
+    const { ticketIds } = req.body; // array of IDs, or 'all' to delete all student's tickets
+    const studentId = req.user._id || req.user.uid;
+    if (!studentId) {
+      return res.status(403).json({ message: 'Access denied.' });
+    }
+
+    let targetTickets = [];
+    if (ticketIds === 'all') {
+      targetTickets = await db.getStudentTickets(studentId);
+    } else if (Array.isArray(ticketIds)) {
+      for (const id of ticketIds) {
+        const ticket = await db.getTicketById(id);
+        if (ticket && ticket.studentId.toString() === studentId.toString()) {
+          targetTickets.push(ticket);
+        }
+      }
+    }
+
+    if (targetTickets.length === 0) {
+      return res.json({ message: 'No tickets were found or deleted.' });
+    }
+
+    const socketService = require('./services/socketService');
+    for (const ticket of targetTickets) {
+      try {
+        socketService.cancelDoubtRequest(ticket._id, ticket.assignedTeacher);
+      } catch (sockErr) {
+        console.warn("⚠️ Failed to cancel doubt request:", sockErr.message);
+      }
+      await db.deleteNotificationsForTicket(ticket._id);
+      await db.deleteSupportTicket(ticket._id);
+    }
+
+    res.json({ message: 'Support tickets deleted successfully.' });
+  } catch (err) {
+    console.error("Error bulk deleting support tickets:", err);
+    res.status(500).json({ message: 'Failed to bulk delete tickets: ' + err.message });
+  }
+});
+
+app.use('/api/tickets', ticketsRouter);
+
+// Serve frontend static files in production
+const frontendDistPath = path.join(__dirname, '../frontend/dist');
+app.use(express.static(frontendDistPath));
+
+// Fallback for React Router (Single Page App)
+app.get('*', (req, res, next) => {
+  if (req.path.startsWith('/api') || req.path.startsWith('/uploads')) {
+    return next();
+  }
+  res.sendFile(path.join(frontendDistPath, 'index.html'));
+});
+
 // Start server
-app.listen(PORT, () => {
+const http = require('http');
+const server = http.createServer(app);
+const socketService = require('./services/socketService');
+
+// Initialize Socket.IO
+socketService.init(server);
+
+server.listen(PORT, () => {
   console.log(`🚀 StudyBuddy Server running on port ${PORT}...`);
 });

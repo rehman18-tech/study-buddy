@@ -6,7 +6,9 @@ import {
   Mail, 
   Lock, 
   User, 
-  GraduationCap, 
+  GraduationCap,
+  Eye,
+  EyeOff, 
   School, 
   ShieldCheck, 
   Phone, 
@@ -16,6 +18,15 @@ import {
   FileCheck2,
   LockKeyhole
 } from 'lucide-react';
+
+const countriesList = [
+  { name: 'India', code: '+91', length: 10 },
+  { name: 'United States', code: '+1', length: 10 },
+  { name: 'United Kingdom', code: '+44', length: 10 },
+  { name: 'Australia', code: '+61', length: 9 },
+  { name: 'United Arab Emirates', code: '+971', length: 9 },
+  { name: 'Singapore', code: '+65', length: 8 }
+];
 
 export const AuthPage = () => {
   const { login, register, loginTeacher, registerTeacher, sendPasswordReset, startDemoSession } = useAuth();
@@ -30,6 +41,7 @@ export const AuthPage = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState('student');
   const [studentClass, setStudentClass] = useState('6');
   const [schoolName, setSchoolName] = useState('');
@@ -40,8 +52,26 @@ export const AuthPage = () => {
   const [parentPin, setParentPin] = useState('1234');
   
   // Teacher Form values
-  const [phone, setPhone] = useState('');
+  const [phoneCountryCode, setPhoneCountryCode] = useState('+91');
+  const [phoneDigits, setPhoneDigits] = useState('');
+  const [country, setCountry] = useState('India');
   const [qualification, setQualification] = useState('');
+  
+  const handleCountryChange = (countryName) => {
+    setCountry(countryName);
+    const config = countriesList.find(c => c.name === countryName);
+    if (config) {
+      setPhoneCountryCode(config.code);
+    }
+  };
+
+  const handleCountryCodeChange = (code) => {
+    setPhoneCountryCode(code);
+    const config = countriesList.find(c => c.code === code);
+    if (config) {
+      setCountry(config.name);
+    }
+  };
   const [specialization, setSpecialization] = useState('');
   const [institution, setInstitution] = useState('');
   const [teacherIdProof, setTeacherIdProof] = useState(null);
@@ -59,7 +89,7 @@ export const AuthPage = () => {
       if (isTeacherPortal) {
         // Teacher Workflow
         if (authMode === 'register') {
-          if (!name || !email || !phone || !qualification || !specialization || !institution || !password) {
+          if (!name || !email || !phoneDigits || !country || !qualification || !specialization || !institution || !password) {
             triggerNotification('⚠️ Please fill out all text fields!', 'red');
             setLoading(false);
             return;
@@ -70,10 +100,24 @@ export const AuthPage = () => {
             return;
           }
 
+          // Validate phone format and length
+          const countryConfig = countriesList.find(c => c.name === country);
+          const expectedLength = countryConfig ? countryConfig.length : 10;
+          const cleanDigits = phoneDigits.replace(/\D/g, '');
+          
+          if (cleanDigits.length !== expectedLength) {
+            triggerNotification(`⚠️ Please enter a valid ${expectedLength}-digit phone number for ${country}.`, 'red');
+            setLoading(false);
+            return;
+          }
+          
+          const formattedPhone = phoneCountryCode + cleanDigits;
+
           const formData = new FormData();
           formData.append('name', name);
           formData.append('email', email);
-          formData.append('phone', phone);
+          formData.append('phone', formattedPhone);
+          formData.append('country', country);
           formData.append('qualification', qualification);
           formData.append('specialization', specialization);
           formData.append('institution', institution);
@@ -86,7 +130,9 @@ export const AuthPage = () => {
           await registerTeacher(formData);
           // Reset fields & switch to login
           setName('');
-          setPhone('');
+          setPhoneDigits('');
+          setPhoneCountryCode('+91');
+          setCountry('India');
           setQualification('');
           setSpecialization('');
           setInstitution('');
@@ -232,10 +278,7 @@ export const AuthPage = () => {
                   placeholder={isTeacherPortal ? "Enter your full name" : "Enter student name"}
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  style={{
-                    width: '100%', padding: '12px 12px 12px 42px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                    fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
-                  }}
+                  className={isTeacherPortal ? "buddy-input" : "buddy-input-student"}
                   required
                 />
               </div>
@@ -251,10 +294,7 @@ export const AuthPage = () => {
                 placeholder={isTeacherPortal ? "teacher@school.com" : "student@school.com"}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                style={{
-                  width: '100%', padding: '12px 12px 12px 42px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                  fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
-                }}
+                className={isTeacherPortal ? "buddy-input" : "buddy-input-student"}
                 required
               />
             </div>
@@ -266,16 +306,32 @@ export const AuthPage = () => {
               <div style={{ position: 'relative' }}>
                 <Lock size={18} style={{ position: 'absolute', left: '14px', top: '14px', color: 'var(--text-muted)' }} />
                 <input
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  style={{
-                    width: '100%', padding: '12px 12px 12px 42px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                    fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
-                  }}
+                  className={isTeacherPortal ? "buddy-input" : "buddy-input-student"}
+                  style={{ paddingRight: '45px' }}
                   required
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{
+                    position: 'absolute',
+                    right: '14px',
+                    top: '14px',
+                    background: 'none',
+                    border: 'none',
+                    cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    padding: 0
+                  }}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
           )}
@@ -283,25 +339,54 @@ export const AuthPage = () => {
           {/* TEACHER METADATA ONBOARDING FIELDS */}
           {isTeacherPortal && authMode === 'register' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              
+              {/* Country & Phone Selector */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>Contact Phone</label>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>Country Selector</label>
                   <div style={{ position: 'relative' }}>
-                    <Phone size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
+                    <Globe size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
+                    <select
+                      value={country}
+                      onChange={(e) => handleCountryChange(e.target.value)}
+                      className="buddy-input"
+                      required
+                    >
+                      {countriesList.map(c => (
+                        <option key={c.name} value={c.name}>{c.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>Phone Number (International)</label>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <select
+                      value={phoneCountryCode}
+                      onChange={(e) => handleCountryCodeChange(e.target.value)}
+                      className="buddy-input buddy-input-noicon"
+                      style={{ width: '90px' }}
+                    >
+                      {countriesList.map(c => (
+                        <option key={c.code} value={c.code}>{c.code}</option>
+                      ))}
+                    </select>
                     <input
                       type="tel"
-                      placeholder="e.g. +91 9988..."
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      style={{
-                        width: '100%', padding: '12px 12px 12px 34px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                        fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
-                      }}
+                      placeholder={`e.g. ${countriesList.find(c => c.name === country)?.length}-digits`}
+                      value={phoneDigits}
+                      onChange={(e) => setPhoneDigits(e.target.value.replace(/\D/g, ''))}
+                      className="buddy-input buddy-input-noicon"
+                      style={{ flex: 1 }}
                       required
                     />
                   </div>
                 </div>
+              </div>
 
+              {/* Qualification & Subject expertise */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 <div>
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>Highest Qualification</label>
                   <div style={{ position: 'relative' }}>
@@ -311,19 +396,14 @@ export const AuthPage = () => {
                       placeholder="e.g. M.Sc Chemistry, B.Ed"
                       value={qualification}
                       onChange={(e) => setQualification(e.target.value)}
-                      style={{
-                        width: '100%', padding: '12px 12px 12px 34px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                        fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
-                      }}
+                      className="buddy-input"
                       required
                     />
                   </div>
                 </div>
-              </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>Subject Specialization</label>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>Subject Expertise</label>
                   <div style={{ position: 'relative' }}>
                     <BookOpen size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
                     <input
@@ -331,64 +411,80 @@ export const AuthPage = () => {
                       placeholder="e.g. Science / Biology"
                       value={specialization}
                       onChange={(e) => setSpecialization(e.target.value)}
-                      style={{
-                        width: '100%', padding: '12px 12px 12px 34px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                        fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
-                      }}
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>School / Institution</label>
-                  <div style={{ position: 'relative' }}>
-                    <School size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
-                    <input
-                      type="text"
-                      placeholder="e.g. AP Model School"
-                      value={institution}
-                      onChange={(e) => setInstitution(e.target.value)}
-                      style={{
-                        width: '100%', padding: '12px 12px 12px 34px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                        fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
-                      }}
+                      className="buddy-input"
                       required
                     />
                   </div>
                 </div>
               </div>
 
+              {/* Institution */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>School / Institution</label>
+                <div style={{ position: 'relative' }}>
+                  <School size={16} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
+                  <input
+                    type="text"
+                    placeholder="e.g. AP Model School"
+                    value={institution}
+                    onChange={(e) => setInstitution(e.target.value)}
+                    className="buddy-input"
+                    required
+                  />
+                </div>
+              </div>
+
               {/* Uploads Block */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '5px' }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3" style={{ marginTop: '5px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '5px' }}>
-                    Govt ID Proof (.pdf, .jpg, .png) *
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>
+                    Government ID Upload (.pdf, .jpg, .png) *
                   </label>
-                  <div style={{ position: 'relative' }}>
+                  <label 
+                    className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 hover:border-purple-400 dark:hover:border-purple-500 cursor-pointer transition text-center space-y-1.5"
+                  >
+                    <FileText className={teacherIdProof ? "text-emerald-500" : "text-purple-500"} size={24} />
+                    <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                      {teacherIdProof ? '✓ ID Proof Selected' : 'Choose Govt ID File'}
+                    </span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+                      {teacherIdProof ? teacherIdProof.name : 'PDF, JPG, PNG up to 10MB'}
+                    </span>
                     <input
                       type="file"
                       accept=".pdf,.jpg,.jpeg,.png"
                       onChange={(e) => handleFileChange(e, 'idProof')}
-                      style={{ fontSize: '0.78rem', width: '100%' }}
-                      required
+                      className="hidden"
+                      required={!teacherIdProof}
                     />
-                  </div>
+                  </label>
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)', marginBottom: '5px' }}>
-                    Teaching Certificates (multiple)
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>
+                    Degree Certificate Upload (multiple)
                   </label>
-                  <div style={{ position: 'relative' }}>
+                  <label 
+                    className="flex flex-col items-center justify-center p-4 rounded-xl border-2 border-dashed border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30 hover:border-purple-400 dark:hover:border-purple-500 cursor-pointer transition text-center space-y-1.5"
+                  >
+                    <FileCheck2 className={teacherCertificates.length > 0 ? "text-emerald-500" : "text-purple-500"} size={24} />
+                    <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-main)' }}>
+                      {teacherCertificates.length > 0 ? `✓ ${teacherCertificates.length} Certificates Selected` : 'Choose Certificates'}
+                    </span>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '100%' }}>
+                      {teacherCertificates.length > 0 
+                        ? teacherCertificates.map(c => c.name).join(', ') 
+                        : 'PDF, JPG, PNG multiple files'
+                      }
+                    </span>
                     <input
                       type="file"
                       multiple
                       accept=".pdf,.jpg,.jpeg,.png"
                       onChange={(e) => handleFileChange(e, 'certs')}
-                      style={{ fontSize: '0.78rem', width: '100%' }}
+                      className="hidden"
                     />
-                  </div>
+                  </label>
                 </div>
               </div>
             </div>
@@ -402,10 +498,7 @@ export const AuthPage = () => {
                 <select
                   value={role}
                   onChange={(e) => setRole(e.target.value)}
-                  style={{
-                    width: '100%', padding: '12px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                    fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
-                  }}
+                  className="buddy-input-student buddy-input-noicon"
                 >
                   <option value="student">Student Profile</option>
                   <option value="parent">Parent Profile</option>
@@ -420,10 +513,8 @@ export const AuthPage = () => {
                       <select
                         value={studentClass}
                         onChange={(e) => setStudentClass(e.target.value)}
-                        style={{
-                          width: '100%', padding: '12px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                          fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none', fontWeight: 'bold'
-                        }}
+                        className="buddy-input-student buddy-input-noicon"
+                        style={{ fontWeight: 'bold' }}
                       >
                         {[6, 7, 8, 9, 10].map((num) => (
                           <option key={num} value={num}>Class {num}</option>
@@ -436,10 +527,8 @@ export const AuthPage = () => {
                       <select
                         value={board}
                         onChange={(e) => setBoard(e.target.value)}
-                        style={{
-                          width: '100%', padding: '12px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                          fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none', fontWeight: 'bold'
-                        }}
+                        className="buddy-input-student buddy-input-noicon"
+                        style={{ fontWeight: 'bold' }}
                       >
                         <option value="SSC">SSC (State Board)</option>
                         <option value="CBSE">CBSE aligned</option>
@@ -456,10 +545,7 @@ export const AuthPage = () => {
                         placeholder="e.g. ZP High School, Nellore"
                         value={schoolName}
                         onChange={(e) => setSchoolName(e.target.value)}
-                        style={{
-                          width: '100%', padding: '12px 12px 12px 42px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                          fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
-                        }}
+                        className="buddy-input-student"
                         required
                       />
                     </div>
@@ -471,10 +557,7 @@ export const AuthPage = () => {
                       <select
                         value={schoolType}
                         onChange={(e) => setSchoolType(e.target.value)}
-                        style={{
-                          width: '100%', padding: '12px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                          fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
-                        }}
+                        className="buddy-input-student buddy-input-noicon"
                       >
                         <option value="Public">Public School</option>
                         <option value="Private">Private School</option>
@@ -486,10 +569,7 @@ export const AuthPage = () => {
                       <select
                         value={preferredLanguage}
                         onChange={(e) => setPreferredLanguage(e.target.value)}
-                        style={{
-                          width: '100%', padding: '12px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                          fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
-                        }}
+                        className="buddy-input-student buddy-input-noicon"
                       >
                         <option value="English">English</option>
                         <option value="Telugu">Telugu (తెలుగు)</option>
@@ -508,10 +588,7 @@ export const AuthPage = () => {
                           placeholder="Parent mobile number"
                           value={parentContact}
                           onChange={(e) => setParentContact(e.target.value)}
-                          style={{
-                            width: '100%', padding: '12px 12px 12px 38px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                            fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none'
-                          }}
+                          className="buddy-input-student"
                           required
                         />
                       </div>
@@ -527,10 +604,8 @@ export const AuthPage = () => {
                           placeholder="1234"
                           value={parentPin}
                           onChange={(e) => setParentPin(e.target.value.replace(/\D/g, ''))}
-                          style={{
-                            width: '100%', padding: '12px 12px 12px 32px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                            fontSize: '0.95rem', fontFamily: 'var(--font-body)', outline: 'none', fontWeight: 'bold', textAlign: 'center'
-                          }}
+                          className="buddy-input-student"
+                          style={{ textAlign: 'center', fontWeight: 'bold' }}
                           required
                         />
                       </div>
@@ -598,6 +673,7 @@ export const AuthPage = () => {
                 </p>
                 <div style={{ display: 'flex', gap: '10px', justifyContent: 'center', marginBottom: '12px' }}>
                   <button 
+                    type="button"
                     onClick={() => startDemoSession('teacher')} 
                     style={{
                       background: 'none', border: 'none', color: 'var(--color-purple)', fontFamily: 'var(--font-header)',
@@ -605,16 +681,6 @@ export const AuthPage = () => {
                     }}
                   >
                     Demo Teacher
-                  </button>
-                  <span style={{ color: 'var(--text-muted)' }}>|</span>
-                  <button 
-                    onClick={() => startDemoSession('admin')} 
-                    style={{
-                      background: 'none', border: 'none', color: 'var(--color-purple-dark)', fontFamily: 'var(--font-header)',
-                      fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer'
-                    }}
-                  >
-                    Demo Admin
                   </button>
                 </div>
                 <button

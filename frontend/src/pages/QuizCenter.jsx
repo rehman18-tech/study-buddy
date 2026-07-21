@@ -1421,9 +1421,12 @@ export const QuizCenter = () => {
     }
   };
 
-  // Filter quizzes by chosen subject
-  const filteredQuizzes = quizzes.filter((q) => q.subject.toLowerCase() === selectedSubject.toLowerCase());
   const currentClass = user?.studentProfile?.class || 5;
+
+  // Filter quizzes by chosen subject and matching class
+  const filteredQuizzes = quizzes.filter(
+    (q) => q.subject.toLowerCase() === selectedSubject.toLowerCase() && Number(q.class) === Number(currentClass)
+  );
 
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', width: '100%' }}>
@@ -1539,7 +1542,7 @@ export const QuizCenter = () => {
           <div style={{
             display: 'flex', gap: '10px', overflowX: 'auto', paddingBottom: '10px', marginBottom: '30px', justifyContent: 'center'
           }}>
-            {['Math', 'Science', 'English', 'Social Studies'].map((sub) => (
+            {['Math', 'Science', 'English', 'Social Studies', 'Hindi', 'Telugu'].map((sub) => (
               <button
                 key={sub}
                 onClick={() => setSelectedSubject(sub)}
@@ -1572,7 +1575,7 @@ export const QuizCenter = () => {
                 <div>
                   <h4 style={{ fontSize: '1.4rem', color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ animation: 'float-animation 3s infinite ease-in-out', display: 'inline-block' }}>
-                      {selectedSubject === 'Math' ? '📐' : selectedSubject === 'Science' ? '🔬' : selectedSubject === 'English' ? '📖' : '🌍'}
+                      {selectedSubject === 'Math' ? '📐' : selectedSubject === 'Science' ? '🔬' : selectedSubject === 'English' ? '📖' : selectedSubject === 'Social Studies' ? '🌍' : selectedSubject === 'Hindi' ? '✍️' : '📚'}
                     </span>
                     {selectedSubject} Mastery Module
                   </h4>

@@ -63,27 +63,22 @@ export const AuthProvider = ({ children }) => {
                 institution: 'Andhra Pradesh Model School'
               });
               navigate('teacher-dashboard');
-            } else if (token === 'demo_admin_token_bypass') {
-              setUser({
-                _id: 'demo_admin_123',
-                name: 'System Admin',
-                email: 'admin@studybuddy.com',
-                role: 'admin',
-                status: 'approved',
-                qualification: 'System Administrator',
-                specialization: 'System Management',
-                institution: 'StudyBuddy Org'
-              });
-              navigate('admin-dashboard');
             } else {
               let data;
               try {
                 data = await api.getMe();
                 setUser(data.user);
+                if (data.user.role === 'admin' || data.user.role === 'super_admin') {
+                  navigate('admin-dashboard');
+                } else if (data.user.role === 'teacher') {
+                  navigate('teacher-dashboard');
+                } else {
+                  navigate('dashboard');
+                }
               } catch (studentErr) {
                 data = await api.getTeacherMe();
                 setUser(data.user);
-                if (data.user.role === 'admin') {
+                if (data.user.role === 'admin' || data.user.role === 'super_admin') {
                   navigate('admin-dashboard');
                 } else {
                   navigate('teacher-dashboard');
@@ -115,14 +110,26 @@ export const AuthProvider = ({ children }) => {
         const data = await api.syncSession({});
         setUser(data.user);
         triggerNotification(`🎉 Welcome back, ${data.user.name}!`);
-        navigate('dashboard');
+        if (data.user.role === 'admin' || data.user.role === 'super_admin') {
+          navigate('admin-dashboard');
+        } else if (data.user.role === 'teacher') {
+          navigate('teacher-dashboard');
+        } else {
+          navigate('dashboard');
+        }
         return data.user;
       } else {
         // Fallback to local server Auth
         const data = await api.login(email, password);
         setUser(data.user);
         triggerNotification(`🎉 Welcome back, ${data.user.name}!`);
-        navigate('dashboard');
+        if (data.user.role === 'admin' || data.user.role === 'super_admin') {
+          navigate('admin-dashboard');
+        } else if (data.user.role === 'teacher') {
+          navigate('teacher-dashboard');
+        } else {
+          navigate('dashboard');
+        }
         return data.user;
       }
     } catch (err) {
@@ -146,14 +153,26 @@ export const AuthProvider = ({ children }) => {
         const data = await api.syncSession(userData);
         setUser(data.user);
         triggerNotification(`🌱 Welcome ${data.user.name}! Profile registered successfully.`);
-        navigate('dashboard');
+        if (data.user.role === 'admin' || data.user.role === 'super_admin') {
+          navigate('admin-dashboard');
+        } else if (data.user.role === 'teacher') {
+          navigate('teacher-dashboard');
+        } else {
+          navigate('dashboard');
+        }
         return data.user;
       } else {
         // Fallback to local server Auth
         const data = await api.register(userData);
         setUser(data.user);
         triggerNotification(`🌱 Welcome ${data.user.name}! Profile registered successfully.`);
-        navigate('dashboard');
+        if (data.user.role === 'admin' || data.user.role === 'super_admin') {
+          navigate('admin-dashboard');
+        } else if (data.user.role === 'teacher') {
+          navigate('teacher-dashboard');
+        } else {
+          navigate('dashboard');
+        }
         return data.user;
       }
     } catch (err) {
@@ -245,7 +264,7 @@ export const AuthProvider = ({ children }) => {
       setUser(data.user);
       localStorage.setItem('studybuddy_token', data.token);
       triggerNotification(`🎉 Welcome back, ${data.user.name}!`);
-      if (data.user.role === 'admin') {
+      if (data.user.role === 'admin' || data.user.role === 'super_admin') {
         navigate('admin-dashboard');
       } else {
         navigate('teacher-dashboard');
@@ -292,27 +311,9 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
-    if (role === 'admin') {
-      const demoAdmin = {
-        _id: 'demo_admin_123',
-        name: 'System Admin',
-        email: 'admin@studybuddy.com',
-        role: 'admin',
-        status: 'approved',
-        qualification: 'System Administrator',
-        specialization: 'System Management',
-        institution: 'StudyBuddy Org'
-      };
-      setUser(demoAdmin);
-      localStorage.setItem('studybuddy_token', 'demo_admin_token_bypass');
-      triggerNotification(`💡 Entering Developer Demo Mode as ${demoAdmin.name}!`);
-      navigate('admin-dashboard');
-      return;
-    }
-
     const demoUser = {
       _id: 'demo_user_123',
-      name: role === 'student' ? 'Alex Rider' : 'Parent of Alex',
+      name: role === 'student' ? 'MD. IBADUR REHMAN' : 'Parent of Alex',
       email: role === 'student' ? 'alex@studybuddy.com' : 'parent@studybuddy.com',
       role: role,
       studentProfile: {

@@ -1,4 +1,7 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (typeof window !== 'undefined' && (window.location.hostname !== 'localhost' || window.location.port === '5000')
+    ? `${window.location.protocol}//${window.location.host}/api` 
+    : 'http://localhost:5000/api');
 
 // Helper to retrieve auth token
 function getAuthHeaders() {
@@ -24,7 +27,18 @@ async function request(endpoint, options = {}) {
     const data = await response.json();
     
     if (!response.ok) {
-      throw new Error(data.message || 'Something went wrong with the API request.');
+      if (response.status === 401) {
+        localStorage.removeItem('studybuddy_token');
+        if (typeof window !== 'undefined') {
+          console.warn("Session expired, invalid, or missing token. Clearing storage and reloading.");
+          window.location.reload();
+          // Return a pending promise to block execution and prevent error alerts
+          return new Promise(() => {});
+        }
+      }
+      const err = new Error(data.message || 'Something went wrong with the API request.');
+      err.status = response.status;
+      throw err;
     }
     
     return data;
@@ -182,18 +196,20 @@ export const api = {
     });
   },
 
-  // AI Teacher API
-  async chatWithAI(message, subject = '', chapter = '', topic = '', studentClass = '') {
+  async chatWithAI(message, subject = '', chapter = '', topic = '', studentClass = '', history = [], overrideChoice = null) {
     return await request('/ai/chat', {
       method: 'POST',
-      body: JSON.stringify({ message, subject, chapter, topic, class: studentClass })
+      body: JSON.stringify({ message, subject, chapter, topic, class: studentClass, history, overrideChoice })
     });
   },
 
-  async translateText(text, targetLanguage) {
+  async translateText(textOrTexts, targetLanguage) {
+    const payload = Array.isArray(textOrTexts)
+      ? { texts: textOrTexts, targetLanguage }
+      : { text: textOrTexts, targetLanguage };
     return await request('/ai/translate', {
       method: 'POST',
-      body: JSON.stringify({ text, targetLanguage })
+      body: JSON.stringify(payload)
     });
   },
 
@@ -296,9 +312,11 @@ export const api = {
     return await request(`/planner/active/${planType}`);
   },
 
-  async generateStudyPlan() {
+  async generateStudyPlan(planType = 'daily') {
     return await request('/planner/generate', {
-      method: 'POST'
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ planType })
     });
   },
 
@@ -394,6 +412,30 @@ export const api = {
     return await request('/admin/stats');
   },
 
+  async getAdminStudents() {
+    return await request('/admin/students');
+  },
+
+  async updateStudent(id, studentData) {
+    return await request(`/admin/students/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(studentData)
+    });
+  },
+
+  async deleteStudent(id) {
+    return await request(`/admin/students/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async updateTeacher(id, teacherData) {
+    return await request(`/admin/teachers/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify(teacherData)
+    });
+  },
+
   // Teacher Review API
   async getPendingAnswers(filters = {}) {
     const params = new URLSearchParams(filters).toString();
@@ -414,6 +456,271 @@ export const api = {
     return await request(`/teachers-review/answers/review/${id}`, {
       method: 'POST',
       body: JSON.stringify(reviewData)
+    });
+  },
+
+  async seedSyllabus() {
+    return await request('/admin/seed-syllabus', {
+      method: 'POST'
+    });
+  },
+
+  // Direct Teacher registry by Admin
+  async createTeacher(teacherData) {
+    return await request('/admin/teachers/create', {
+      method: 'POST',
+      body: JSON.stringify(teacherData)
+    });
+  },
+
+  // Manual Syllabus management by Admin
+  async addSyllabusTopic(topicData) {
+    return await request('/syllabus/add-topic', {
+      method: 'POST',
+      body: JSON.stringify(topicData)
+    });
+  },
+
+  async deleteSyllabusTopic(topicData) {
+    return await request('/syllabus/delete-topic', {
+      method: 'POST',
+      body: JSON.stringify(topicData)
+    });
+  },
+
+  async deleteSyllabusChapter(chapterData) {
+    return await request('/syllabus/delete-chapter', {
+      method: 'POST',
+      body: JSON.stringify(chapterData)
+    });
+  },
+
+  async deleteSyllabusSubject(subjectData) {
+    return await request('/syllabus/delete-subject', {
+      method: 'POST',
+      body: JSON.stringify(subjectData)
+    });
+  },
+
+  // --- RBAC & System Management APIs ---
+  async getAdmins() {
+    return await request('/admin/admins');
+  },
+
+  async createAdmin(adminData) {
+    return await request('/admin/admins', {
+      method: 'POST',
+      body: JSON.stringify(adminData)
+    });
+  },
+
+  async updateAdminPermissions(id, permissionsData) {
+    return await request(`/admin/admins/permissions/${id}`, {
+      method: 'POST',
+      body: JSON.stringify(permissionsData)
+    });
+  },
+
+  async suspendAdmin(id, status) {
+    return await request(`/admin/admins/suspend/${id}`, {
+      method: 'POST',
+      body: JSON.stringify({ status })
+    });
+  },
+
+  async deleteAdmin(id) {
+    return await request(`/admin/admins/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async getAuditLogs() {
+    return await request('/admin/logs');
+  },
+
+  async getHealthStatus() {
+    return await request('/admin/health');
+  },
+
+  async updateSystemSettings(settings) {
+    return await request('/admin/settings', {
+      method: 'POST',
+      body: JSON.stringify(settings)
+    });
+  },
+
+  async getSystemSettingsPublic() {
+    return await request('/admin/settings/public');
+  },
+
+  // --- Announcements APIs ---
+  async getAnnouncements() {
+    return await request('/admin/announcements');
+  },
+
+  async createAnnouncement(annData) {
+    return await request('/admin/announcements', {
+      method: 'POST',
+      body: JSON.stringify(annData)
+    });
+  },
+
+  async deleteAnnouncement(id) {
+    return await request(`/admin/announcements/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  // --- Reports APIs ---
+  async getReports() {
+    return await request('/admin/reports');
+  },
+
+  async resolveReport(id, status) {
+    return await request(`/admin/reports/resolve/${id}`, {
+      method: 'POST',
+      body: JSON.stringify({ status })
+    });
+  },
+
+  async createReport(reportData) {
+    return await request('/admin/reports', {
+      method: 'POST',
+      body: JSON.stringify(reportData)
+    });
+  },
+
+  // --- Multi-Layer Trust & Doubt APIs ---
+  async createDoubt(doubtData) {
+    return await request('/doubts', {
+      method: 'POST',
+      body: JSON.stringify(doubtData)
+    });
+  },
+
+  async getStudentDoubts() {
+    return await request('/doubts');
+  },
+
+  async getDoubtStatus(id) {
+    return await request(`/doubts/status/${id}`);
+  },
+
+  async getPendingDoubts(filters = {}) {
+    const params = new URLSearchParams(filters).toString();
+    return await request(`/teachers-review/doubts?${params}`);
+  },
+
+  async resolveDoubt(id, resolveData) {
+    return await request(`/teachers-review/doubts/resolve/${id}`, {
+      method: 'POST',
+      body: JSON.stringify(resolveData)
+    });
+  },
+
+  // --- Teacher Support System: Ticket APIs ---
+  async createSupportTicket(ticketData) {
+    return await request('/tickets', {
+      method: 'POST',
+      body: JSON.stringify(ticketData)
+    });
+  },
+
+  async getStudentTickets() {
+    return await request('/tickets/student');
+  },
+
+  async getPendingTickets() {
+    return await request('/tickets/pending');
+  },
+
+  async getTeacherActiveTickets() {
+    return await request('/tickets/active');
+  },
+
+  async getTeacherCompletedTickets() {
+    return await request('/tickets/completed');
+  },
+
+  async acceptSupportTicket(id) {
+    return await request(`/tickets/${id}/accept`, {
+      method: 'POST'
+    });
+  },
+
+  async resolveSupportTicket(id, teacherAnswer, whiteboardImage) {
+    return await request(`/tickets/${id}/resolve`, {
+      method: 'POST',
+      body: JSON.stringify({ teacherAnswer, whiteboardImage })
+    });
+  },
+
+  async getTicketStatus(id) {
+    return await request(`/tickets/${id}/status`);
+  },
+
+  async deleteSupportTicket(id) {
+    return await request(`/tickets/${id}`, {
+      method: 'DELETE'
+    });
+  },
+
+  async deleteBulkSupportTickets(ticketIds) {
+    return await request('/tickets/delete-bulk', {
+      method: 'POST',
+      body: JSON.stringify({ ticketIds })
+    });
+  },
+
+  async getDoubtStatus(id) {
+    return await request(`/doubts/status/${id}`);
+  },
+
+  async getAnswerStatus(id) {
+    return await request(`/answers/status/${id}`);
+  },
+
+  async addTextbookContent(contentData) {
+    return await request('/admin/textbook-content', {
+      method: 'POST',
+      body: JSON.stringify(contentData)
+    });
+  },
+
+  // --- Teacher Real-Time Notifications & Settings ---
+  async getTeacherSettings() {
+    return await request('/teachers/settings');
+  },
+
+  async updateTeacherSettings(settingsData) {
+    return await request('/teachers/settings', {
+      method: 'POST',
+      body: JSON.stringify(settingsData)
+    });
+  },
+
+  async updateTeacherStatus(status) {
+    return await request('/teachers/status', {
+      method: 'POST',
+      body: JSON.stringify({ status })
+    });
+  },
+
+  async getTeacherNotifications() {
+    return await request('/teachers/notifications');
+  },
+
+  async markNotificationsRead(notificationIds) {
+    return await request('/teachers/notifications/read', {
+      method: 'POST',
+      body: JSON.stringify({ notificationIds })
+    });
+  },
+
+  async saveTeacherFcmToken(fcmToken) {
+    return await request('/teachers/fcm-token', {
+      method: 'POST',
+      body: JSON.stringify({ fcmToken })
     });
   }
 };

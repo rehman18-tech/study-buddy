@@ -14,12 +14,12 @@ function decodeEntities(str) {
  * @param {string} query - The search query
  * @returns {Promise<Array<{title: string, url: string, snippet: string}>>}
  */
-async function searchWeb(query) {
+async function searchWeb(query, limit = 3) {
   if (!query || !query.trim()) return [];
   const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
   
   try {
-    console.log(`🔍 [SearchService] Searching web for: "${query}"`);
+    console.log(`🔍 [SearchService] Searching web for: "${query}" (limit: ${limit})`);
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
@@ -36,7 +36,7 @@ async function searchWeb(query) {
     const resultBlockRegex = /<div class="result results_links results_links_deep web-result[\s\S]*?<\/div>\s*<\/div>\s*<\/div>/g;
     
     let match;
-    while ((match = resultBlockRegex.exec(html)) !== null && results.length < 3) {
+    while ((match = resultBlockRegex.exec(html)) !== null && results.length < limit) {
       const block = match[0];
       
       const titleMatch = /<a class="result__url"[^>]*href="([^"]+)"[^>]*>([\s\S]*?)<\/a>/.exec(block);

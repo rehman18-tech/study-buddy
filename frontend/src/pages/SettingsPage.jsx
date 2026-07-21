@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { Mascot } from '../components/Mascot';
-import { Settings, Globe, Moon, Sun, Trees, Sparkles, BookOpen } from 'lucide-react';
+import { Settings, Globe, Moon, Sun, Trees, Sparkles, BookOpen, Eye, EyeOff } from 'lucide-react';
 
 export const SettingsPage = () => {
   const { theme, setTheme, language, setLanguage, t, triggerNotification } = useApp();
@@ -14,6 +14,7 @@ export const SettingsPage = () => {
   const [editBoard, setEditBoard] = useState(user?.studentProfile?.board || 'SSC');
   const [editSchoolType, setEditSchoolType] = useState(user?.studentProfile?.schoolType || 'Public');
   const [editPin, setEditPin] = useState(user?.studentProfile?.parentPin || '1234');
+  const [showPin, setShowPin] = useState(false);
   const [saving, setSaving] = useState(false);
 
   const handleLanguageChange = async (langCode) => {
@@ -258,16 +259,36 @@ export const SettingsPage = () => {
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-main)', marginBottom: '5px' }}>
                     Parent PIN
                   </label>
-                  <input
-                    type="password"
-                    maxLength={4}
-                    value={editPin}
-                    onChange={(e) => setEditPin(e.target.value.replace(/\D/g, ''))}
-                    style={{
-                      width: '100%', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
-                      fontSize: '0.95rem', outline: 'none', textAlign: 'center', fontWeight: 'bold'
-                    }}
-                  />
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showPin ? "text" : "password"}
+                      maxLength={4}
+                      value={editPin}
+                      onChange={(e) => setEditPin(e.target.value.replace(/\D/g, ''))}
+                      style={{
+                        width: '100%', padding: '10px 12px', paddingRight: '45px', borderRadius: 'var(--radius-sm)', border: '2px solid var(--border-light)',
+                        fontSize: '0.95rem', outline: 'none', textAlign: 'center', fontWeight: 'bold'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPin(!showPin)}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '11px',
+                        background: 'none',
+                        border: 'none',
+                        cursor: 'pointer',
+                        color: 'var(--text-muted)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: 0
+                      }}
+                    >
+                      {showPin ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
                 </div>
               </div>
 

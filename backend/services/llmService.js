@@ -1,8 +1,42 @@
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
 
+const LOCAL_QUIZ_HINDI = {
+  title: "हिंदी व्याकरण अभ्यास प्रश्नोत्तरी",
+  questions: [
+    { type: "mcq", question: "हिंदी वर्णमाला में कितने स्वर होते हैं?", options: ["11", "13", "33", "52"], correctAnswerIndex: 0, explanation: "हिंदी वर्णमाला में मूल रूप से 11 स्वर होते हैं।" },
+    { type: "mcq", question: "निम्नलिखित में से संज्ञा शब्द कौन सा है?", options: ["सुंदर", "लिखना", "दिल्ली", "धीरे-धीरे"], correctAnswerIndex: 2, explanation: "दिल्ली एक व्यक्तिवाचक संज्ञा है।" },
+    { type: "mcq", question: "सूर्योदय का संधि विच्छेद क्या होगा?", options: ["सूर्य + उदय", "सूर्य + दय", "सूर्यो + उदय", "सूर + उदय"], correctAnswerIndex: 0, explanation: "सूर्य + उदय मिलकर सूर्योदय बनता है (गुण संधि)।" },
+    { type: "mcq", question: "अग्नि का पर्यायवाची शब्द क्या है?", options: ["जल", "पवन", "अनल", "गगन"], correctAnswerIndex: 2, explanation: "अग्नि का पर्यायवाची अनल है।" },
+    { type: "mcq", question: "सूरदास ने मुख्य रूप से किस भाषा में रचनाएँ की हैं?", options: ["अवधी", "खड़ी बोली", "ब्रजभाषा", "मैथिली"], correctAnswerIndex: 2, explanation: "सूरदास की अधिकांश रचनाएँ ब्रजभाषा में हैं।" },
+    { type: "mcq", question: "काल के कितने भेद होते हैं?", options: ["दो", "तीन", "चार", "पांच"], correctAnswerIndex: 1, explanation: "काल के तीन भेद होते हैं: भूतकाल, वर्तमानकाल और भविष्यकाल।" },
+    { type: "mcq", question: "गंगा भारत की पवित्र नदी है - इसमें 'गंगा' कौन सी संज्ञा है?", options: ["जातिवाचक", "भाववाचक", "समूहवाचक", "व्यक्तिवाचक"], correctAnswerIndex: 3, explanation: "गंगा एक विशेष नदी का नाम है, इसलिए यह व्यक्तिवाचक संज्ञा है।" },
+    { type: "mcq", question: "निम्नलिखित में से अशुद्ध शब्द कौन सा है?", options: ["कवि", "कवयित्री", "उज्ज्वल", "कविइत्री"], correctAnswerIndex: 3, explanation: "कविइत्री अशुद्ध रूप है, शुद्ध रूप कवयित्री है।" },
+    { type: "mcq", question: "जो सब कुछ जानता हो, उसे क्या कहते हैं?", options: ["अल्पज्ञ", "सर्वज्ञ", "विद्वान", "ज्ञानी"], correctAnswerIndex: 1, explanation: "सब कुछ जानने वाले को सर्वज्ञ कहा जाता है।" },
+    { type: "mcq", question: "आँखों का तारा होना मुहावरे का क्या अर्थ है?", options: ["बहुत प्यारा होना", "दूर होना", "अंधा होना", "कम दिखना"], correctAnswerIndex: 0, explanation: "आँखों का तारा होने का अर्थ है अत्यधिक प्रिय या बहुत प्यारा होना।" }
+  ]
+};
+
+const LOCAL_QUIZ_TELUGU = {
+  title: "తెలుగు వ్యాకరణ సాధన క్విజ్",
+  questions: [
+    { type: "mcq", question: "తెలుగు భాషలో మొత్తం ఎన్ని అచ్చులు ఉన్నాయి?", options: ["12", "16", "36", "56"], correctAnswerIndex: 1, explanation: "తెలుగు వర్ణమాలలో 16 అచ్చులు ఉన్నాయి." },
+    { type: "mcq", question: "క్రింది వాటిలో నామవాచకం (Noun) ఏది?", options: ["రాముడు", "వెళ్ళాడు", "అక్కడ", "అందమైన"], correctAnswerIndex: 0, explanation: "రాముడు అనేది ఒక వ్యక్తి పేరు, కాబట్టి ఇది నామవాచకం." },
+    { type: "mcq", question: "సూర్యోదయం ఏ సంధి?", options: ["సవర్ణదీర్ఘ సంధి", "గుణ సంధి", "యణాదేశ సంధి", "వృద్ధి సంధి"], correctAnswerIndex: 1, explanation: "సూర్య + ఉదయం = సూర్యోదయం (గుణ సంధి)." },
+    { type: "mcq", question: "భానుడు అంటే అర్థం ఏమిటి?", options: ["చంద్రుడు", "సూర్యుడు", "నక్షత్రం", "ఆకాశం"], correctAnswerIndex: 1, explanation: "భానుడు అనగా సూర్యుడు." },
+    { type: "mcq", question: "తెలుగు వర్ణమాలలో హల్లులు ఎన్ని?", options: ["16", "37", "56", "21"], correctAnswerIndex: 1, explanation: "తెలుగు వర్ణమాలలో హల్లులు 37 ఉన్నాయి." },
+    { type: "mcq", question: "క్రియా పదం (Verb) ఏది?", options: ["అతడు", "చదివాడు", "రాము", "పెద్ద"], correctAnswerIndex: 1, explanation: "చదివాడు అనేది ఒక పనిని సూచిస్తుంది, కాబట్టి ఇది క్రియా పదం." },
+    { type: "mcq", question: "తెలుగులో విభక్తులు ఎన్ని రకాలు?", options: ["5", "6", "7", "8"], correctAnswerIndex: 3, explanation: "తెలుగులో ప్రథమా విభక్తి నుండి సంబోధనా ప్రథమా విభక్తి వరకు మొత్తం 8 విభక్తులు ఉన్నాయి." },
+    { type: "mcq", question: "అమ్మకు సమానమైన దైవం లేదు - ఇందులో అమ్మ ఏ లింగం?", options: ["పుంలింగం", "స్త్రీలింగం", "నపుంసకలింగం", "మహద్వాచకం"], correctAnswerIndex: 1, explanation: "అమ్మ అనేది స్త్రీలింగ పదం." },
+    { type: "mcq", question: "రామాయణం కావ్యాన్ని రాసిన కవి ఎవరు?", options: ["వ్యాసుడు", "వాల్మీకి", "కాళిదాసు", "నన్నయ"], correctAnswerIndex: 1, explanation: "రామాయణాన్ని సంస్కృతంలో వాల్మీకి మహర్షి రచించారు." },
+    { type: "mcq", question: "తెలుగు తిథులలో మొదటిది ఏది?", options: ["పాడ్యమి", "తదియ", "విదియ", "చవితి"], correctAnswerIndex: 0, explanation: "తెలుగు తిథులలో మొదటి తిథి పాడ్యమి." }
+  ]
+};
+
 // Local model dataset for offline fallback
 const LOCAL_QUIZZES_EN = {
+  Hindi: LOCAL_QUIZ_HINDI,
+  Telugu: LOCAL_QUIZ_TELUGU,
   Mathematics: {
     title: "Mathematics Practice Quiz",
     questions: [
@@ -51,6 +85,8 @@ const LOCAL_QUIZZES_EN = {
 };
 
 const LOCAL_QUIZZES_HI = {
+  Hindi: LOCAL_QUIZ_HINDI,
+  Telugu: LOCAL_QUIZ_TELUGU,
   Mathematics: {
     title: "गणित अभ्यास प्रश्नोत्तरी",
     questions: [
@@ -99,6 +135,8 @@ const LOCAL_QUIZZES_HI = {
 };
 
 const LOCAL_QUIZZES_TE = {
+  Hindi: LOCAL_QUIZ_HINDI,
+  Telugu: LOCAL_QUIZ_TELUGU,
   Mathematics: {
     title: "గణిత సాధన క్విజ్",
     questions: [
@@ -147,6 +185,28 @@ const LOCAL_QUIZZES_TE = {
 };
 
 const LOCAL_EXAMS = {
+  Hindi: {
+    quickNotes: [
+      "संज्ञा, सर्वनाम, क्रिया और विशेषण के भेदों को ध्यान से पढ़ें।",
+      "संधि विच्छेद और मुहावरों का अभ्यास नियमित रूप से करें।"
+    ],
+    importantQuestions: [
+      "सूर्योदय का संधि विच्छेद कीजिए और संधि का नाम बताइए।",
+      "संज्ञा किसे कहते हैं? उदाहरण सहित स्पष्ट कीजिए।"
+    ],
+    revisionPlan: "20 मिनट हिंदी व्याकरण के नियमों का अभ्यास करें और 5 मिनट का ब्रेक लें।"
+  },
+  Telugu: {
+    quickNotes: [
+      "తెలుగు వ్యాకరణంలో సంధులు మరియు సమాసాలను బాగా అధ్యయనం చేయండి.",
+      "విభక్తులు మరియు వాటి ప్రత్యయాలను గుర్తుంచుకోండి."
+    ],
+    importantQuestions: [
+      "సూర్యోదయం పదాన్ని విడదీసి, సంధి పేరు రాయండి.",
+      "నామవాచకం అనగానేమి? రెండు ఉదాహరణలు ఇవ్వండి."
+    ],
+    revisionPlan: "20 నిమిషాలు తెలుగు వ్యాకరణం మరియు పద్యాలను చదవండి, తర్వాత 5 నిమిషాల విరామం తీసుకోండి."
+  },
   Mathematics: {
     quickNotes: [
       "Practice fractions, decimals, and basic percentages.",
@@ -443,6 +503,8 @@ For example, if you slice a pizza into 4 equal slices and eat 1 slice, you have 
   else if (/sci/i.test(promptText) || /sci/i.test(systemInstruction)) subject = 'Science';
   else if (/english/i.test(promptText) || /english/i.test(systemInstruction)) subject = 'English';
   else if (/social/i.test(promptText) || /social/i.test(systemInstruction)) subject = 'Social Studies';
+  else if (/hindi/i.test(promptText) || /hindi/i.test(systemInstruction)) subject = 'Hindi';
+  else if (/telugu/i.test(promptText) || /telugu/i.test(systemInstruction)) subject = 'Telugu';
 
   console.log(`🤖 [LocalModel] Running offline fallback model for type: ${type}, subject: ${subject}, preferredLanguage: ${preferredLanguage}`);
 
@@ -501,11 +563,17 @@ For example, if you slice a pizza into 4 equal slices and eat 1 slice, you have 
       const quiz = quizSource[subject] || quizSource.default;
       const title = quiz.title;
       const questions = quiz.questions;
-      const explanationText = isHindi 
-        ? "एआई वर्तमान में उच्च मांग का सामना कर रहा है। कोई चिंता नहीं! मैंने आपके लिए एक त्वरित स्थानीय अभ्यास प्रश्नोत्तरी तैयार की है। आइए आपके कौशल का परीक्षण करें!"
-        : isTelugu 
-        ? "AI ప్రస్తుతం అధిక డిమాండ్‌ను ఎదుర్కొంటోంది. చింతించకండి! నేను మీ కోసం శీఘ్ర స్థానిక ప్రాక్టీస్ క్విజ్‌ను రూపొందించాను. మీ నైపుణ్యాలను పరీక్షించుకుందాం!"
-        : `Hoot hoot! 🦉 The online AI is currently experiencing high demand. No worries, I have generated a local practice quiz for you to test your skills!`;
+      
+      let explanationText = `Hoot hoot! 🦉 The online AI is currently experiencing high demand. No worries, I have generated a local practice quiz for you to test your skills!`;
+      if (subject === 'Hindi' || isHindi) {
+        explanationText = "एआई वर्तमान में उच्च मांग का सामना कर रहा है। कोई चिंता नहीं! मैंने आपके लिए एक त्वरित स्थानीय अभ्यास प्रश्नोत्तरी तैयार की है। आइए आपके कौशल का परीक्षण करें!";
+      } else if (subject === 'Telugu' || isTelugu) {
+        explanationText = "AI ప్రస్తుతం అధిక డిమాండ్‌ను ఎదుర్కొంటోంది. చింతించకండి! నేను మీ కోసం శీఘ్ర స్థానిక ప్రాక్టీస్ క్విజ్‌ను రూపొందించాను. మీ నైపుణ్యాలను పరీక్షించుకుందాం!";
+      }
+
+      const chapterName = (subject === 'Hindi' || isHindi)
+        ? 'ऑफ़लाइन अभ्यास'
+        : ((subject === 'Telugu' || isTelugu) ? 'ఆఫ్‌లైన్ ప్రాక్టీస్' : 'Offline Practice');
 
       return JSON.stringify({
         explanation: explanationText,
@@ -513,7 +581,7 @@ For example, if you slice a pizza into 4 equal slices and eat 1 slice, you have 
           quizId: 'local_quiz_' + Date.now(),
           title: title,
           subject: subject === 'default' ? 'General' : subject,
-          chapterName: isHindi ? 'ऑफ़लाइन अभ्यास' : (isTelugu ? 'ఆఫ్‌లైన్ ప్రాక్టీస్' : 'Offline Practice'),
+          chapterName: chapterName,
           questions: questions
         }
       });
@@ -607,7 +675,19 @@ For example, if you slice a pizza into 4 equal slices and eat 1 slice, you have 
       let revisionPlan = exam.revisionPlan;
       let subTrans = subject === 'default' ? 'General' : subject;
 
-      if (preferredLanguage === 'Hindi' || preferredLanguage === 'Telugu') {
+      if (subject === 'Hindi') {
+        explanation = "यहाँ आपके ऑफ़लाइन स्टडी बडी द्वारा संकलित एक कस्टम परीक्षा तैयारी अध्ययन पत्रक है!";
+        quickNotes = exam.quickNotes;
+        importantQuestions = exam.importantQuestions;
+        revisionPlan = exam.revisionPlan;
+        subTrans = "हिंदी";
+      } else if (subject === 'Telugu') {
+        explanation = "ఇక్కడ మీ ఆఫ్‌లైన్ స్టడీ బడ్డీ రూపొందించిన కస్టమ్ పరీక్ష తయారీ స్టడీ షీట్ ఉంది!";
+        quickNotes = exam.quickNotes;
+        importantQuestions = exam.importantQuestions;
+        revisionPlan = exam.revisionPlan;
+        subTrans = "తెలుగు";
+      } else if (preferredLanguage === 'Hindi' || preferredLanguage === 'Telugu') {
         const trans = localTranslations[preferredLanguage];
         explanation = trans.explanation_exam;
         subTrans = trans.subjects[subject] || subject;
@@ -821,80 +901,170 @@ async function fallbackToBackup(systemInstruction, promptText, jsonMode, useOpen
     return runLocalModel(systemInstruction, promptText, jsonMode);
   }
 }
+function cleanJsonResponse(text) {
+  let clean = text.trim();
+  if (clean.startsWith('```')) {
+    clean = clean.replace(/^```json\s*/i, '').replace(/```$/, '').trim();
+  }
+  const start = clean.indexOf('{');
+  const end = clean.lastIndexOf('}');
+  if (start !== -1 && end !== -1 && end > start) {
+    clean = clean.substring(start, end + 1);
+  }
+  return clean;
+}
+
+async function requestGemini(model, systemInstruction, promptText, jsonMode, apiKey) {
+  const keyToUse = apiKey || GEMINI_API_KEY;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${keyToUse}`;
+  
+  const makeRequest = async (useJson) => {
+    const responseFetch = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: promptText }] }],
+        systemInstruction: { parts: [{ text: systemInstruction }] },
+        generationConfig: {
+          responseMimeType: useJson ? "application/json" : "text/plain"
+        }
+      })
+    });
+
+    if (!responseFetch.ok) {
+      const errText = await responseFetch.text();
+      throw { status: responseFetch.status, message: errText };
+    }
+
+    const responseData = await responseFetch.json();
+    const text = responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!text || !text.trim()) {
+      throw new Error("empty text content");
+    }
+    return text.trim();
+  };
+
+  try {
+    return await makeRequest(jsonMode);
+  } catch (err) {
+    if (jsonMode && (err.status === 400 || (err.message && err.message.includes('responseMimeType')))) {
+      console.log(`⚠️ [LLMService] Model ${model} does not support native JSON mode. Retrying in text mode...`);
+      return await makeRequest(false);
+    }
+    throw new Error(err.message || `status ${err.status}`);
+  }
+}
 
 async function callLLM(systemInstruction, promptText, jsonMode = false, throwOnError = false) {
   const useGemini = GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_here';
   const useOpenAI = OPENAI_API_KEY && OPENAI_API_KEY !== 'your_openai_api_key_here';
 
-  // 1. Try Gemini
-  if (useGemini) {
-    try {
-      console.log("⚡ [LLMService] Requesting Gemini...");
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
-      const responseFetch = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: promptText }] }],
-          systemInstruction: { parts: [{ text: systemInstruction }] },
-          generationConfig: {
-            responseMimeType: jsonMode ? "application/json" : "text/plain"
-          }
-        })
-      });
+  let rawResult = '';
+  let succeeded = false;
 
-      if (responseFetch.ok) {
-        const responseData = await responseFetch.json();
-        const text = responseData?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (text && text.trim()) {
-          return text.trim();
-        } else {
-          console.warn("⚠️ [LLMService] Gemini returned empty text content. Switching to backup...");
-          return await fallbackToBackup(systemInstruction, promptText, jsonMode, useOpenAI, throwOnError);
-        }
-      } else {
-        const status = responseFetch.status;
-        const errText = await responseFetch.text();
-        console.warn(`⚠️ [LLMService] Gemini returned error status: ${status}. Text: ${errText}`);
-        
-        // Auto-failover on specified status codes or any other failure
-        if ([429, 500, 502, 503, 504].includes(status)) {
-          console.log(`🔄 [LLMService] Gemini unavailable (status ${status}). Switching to backup...`);
-          return await fallbackToBackup(systemInstruction, promptText, jsonMode, useOpenAI, throwOnError);
-        } else {
-          console.log(`🔄 [LLMService] Gemini failed with status ${status}. Switching to backup...`);
-          return await fallbackToBackup(systemInstruction, promptText, jsonMode, useOpenAI, throwOnError);
+  // 1. Try Gemini with Model Failover & Key Failover
+  if (useGemini) {
+    const keys = GEMINI_API_KEY.split(',').map(k => k.trim()).filter(k => k);
+    const models = [
+      'gemini-2.5-flash',
+      'gemini-2.0-flash',
+      'gemini-1.5-flash',
+      'gemini-1.5-pro'
+    ];
+
+    for (const key of keys) {
+      if (succeeded) break;
+      for (const model of models) {
+        try {
+          console.log(`⚡ [LLMService] Requesting Gemini (${model}) using key starting with ${key.substring(0, 8)}...`);
+          rawResult = await requestGemini(model, systemInstruction, promptText, jsonMode, key);
+          succeeded = true;
+          break;
+        } catch (err) {
+          console.warn(`⚠️ [LLMService] Gemini (${model}) failed:`, err.message);
+          // If the error is a quota limit (429), break model loop to try the next key
+          if (err.status === 429 || (err.message && (err.message.includes('429') || err.message.includes('RESOURCE_EXHAUSTED')))) {
+            console.warn(`⚠️ [LLMService] Quota exceeded (429) for key. Trying next key if available.`);
+            break;
+          }
         }
       }
-    } catch (err) {
-      console.error("⚠️ [LLMService] Gemini connection/execution exception:", err.message);
-      return await fallbackToBackup(systemInstruction, promptText, jsonMode, useOpenAI, throwOnError);
     }
   }
 
   // 2. Try OpenAI
-  if (useOpenAI) {
+  if (!succeeded && useOpenAI) {
     try {
-      console.log("⚡ [LLMService] Gemini not configured. Requesting OpenAI...");
-      return await callOpenAI(systemInstruction, promptText, jsonMode);
+      console.log("⚡ [LLMService] Gemini failed or not configured. Requesting OpenAI...");
+      rawResult = await callOpenAI(systemInstruction, promptText, jsonMode);
+      succeeded = true;
     } catch (err) {
-      if (throwOnError) {
-        throw new Error("OpenAI execution failed: " + err.message);
-      }
-      console.error("⚠️ [LLMService] OpenAI execution failed. Switching to Local Model...", err.message);
-      return runLocalModel(systemInstruction, promptText, jsonMode);
+      console.error("⚠️ [LLMService] OpenAI execution failed:", err.message);
     }
   }
 
   // 3. Fallback to Local Model
-  if (throwOnError) {
-    throw new Error("Neither Gemini nor OpenAI configured/successful.");
+  if (!succeeded) {
+    if (throwOnError) {
+      throw new Error("Neither Gemini nor OpenAI configured/successful.");
+    }
+    console.log("🤖 [LLMService] Neither Gemini nor OpenAI successful. Using Local Model...");
+    return runLocalModel(systemInstruction, promptText, jsonMode);
   }
-  console.log("🤖 [LLMService] Neither Gemini nor OpenAI configured. Using Local Model...");
-  return runLocalModel(systemInstruction, promptText, jsonMode);
+
+  if (jsonMode && rawResult) {
+    return cleanJsonResponse(rawResult);
+  }
+  return rawResult;
+}
+
+async function getEmbedding(text) {
+  const useGemini = GEMINI_API_KEY && GEMINI_API_KEY !== 'your_gemini_api_key_here';
+  if (!useGemini) {
+    console.log("🤖 [LLMService] No Gemini key configured. Returning dummy mock embedding vector...");
+    const dummy = [];
+    for (let i = 0; i < 768; i++) dummy.push(Math.random() - 0.5);
+    return dummy;
+  }
+
+  const keys = GEMINI_API_KEY.split(',').map(k => k.trim()).filter(k => k);
+  for (const key of keys) {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-embedding-001:embedContent?key=${key}`;
+    try {
+      console.log(`⚡ [LLMService] Requesting Gemini Embedding (gemini-embedding-001) using key starting with ${key.substring(0, 8)}...`);
+      const responseFetch = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: "models/gemini-embedding-001",
+          content: {
+            parts: [{ text: text }]
+          }
+        })
+      });
+
+      if (!responseFetch.ok) {
+        const errText = await responseFetch.text();
+        throw new Error(errText);
+      }
+
+      const data = await responseFetch.json();
+      if (data?.embedding?.values) {
+        return data.embedding.values;
+      }
+    } catch (e) {
+      console.warn("⚠️ [LLMService] Embedding fetch failed for key. Trying next key:", e.message);
+    }
+  }
+
+  console.log("🤖 [LLMService] All Gemini keys failed. Returning dummy mock embedding vector...");
+  const dummy = [];
+  for (let i = 0; i < 768; i++) dummy.push(Math.random() - 0.5);
+  return dummy;
 }
 
 module.exports = {
   callLLM,
-  runLocalModel
+  runLocalModel,
+  getEmbedding
 };
