@@ -1709,9 +1709,11 @@ export const AITeacher = () => {
   // Socket Connection for Students
   useEffect(() => {
     const token = localStorage.getItem('studybuddy_token') || 'demo_student_token_bypass';
-    const socketUrl = typeof window !== 'undefined' && (window.location.hostname !== 'localhost' || window.location.port === '5000')
-      ? `${window.location.protocol}//${window.location.host}`
-      : 'http://localhost:5000';
+    const socketUrl = import.meta.env.VITE_API_URL
+      ? import.meta.env.VITE_API_URL.replace('/api', '')
+      : (typeof window !== 'undefined' && (window.location.hostname !== 'localhost' || window.location.port === '5000')
+          ? `${window.location.protocol}//${window.location.host}`
+          : 'http://localhost:5000');
     
     const s = io(socketUrl, {
       query: { token }
@@ -2157,8 +2159,15 @@ export const AITeacher = () => {
 
         if (data.status === 'assigned' && prevStatus === 'pending') {
           triggerNotification(`👨‍🏫 A teacher has accepted your support ticket!`, 'success');
+          setSearchStatus({
+            status: 'assigned',
+            message: `🎉 Verified Teacher ${data.assignedTeacherName || 'Subject Teacher'} has accepted your help request!`,
+            teacherName: data.assignedTeacherName,
+            institution: data.assignedTeacherInstitution || 'StudyBuddy Partner'
+          });
         } else if (data.status === 'completed' && prevStatus !== 'completed') {
           triggerNotification(`🎉 A teacher has resolved your support ticket! Check the chat or your tickets list.`, 'success');
+          setSearchStatus(null);
           fetchStudentTickets(); // Refresh the tickets list
         }
         
