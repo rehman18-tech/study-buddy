@@ -16,10 +16,42 @@ function decodeEntities(str) {
  */
 async function searchWeb(query, limit = 3) {
   if (!query || !query.trim()) return [];
+  
+  const SERPER_API_KEY = process.env.SERPER_API_KEY;
+  if (SERPER_API_KEY && SERPER_API_KEY !== 'your_serper_api_key_here') {
+    try {
+      console.log(`🔍 [SearchService] Requesting Google search via Serper for: "${query}" (limit: ${limit})`);
+      const response = await fetch("https://google.serper.dev/search", {
+        method: "POST",
+        headers: {
+          "X-API-KEY": SERPER_API_KEY,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ q: query, num: limit })
+      });
+
+      if (!response.ok) {
+        throw new Error(`Serper API returned status ${response.status}`);
+      }
+
+      const data = await response.json();
+      const results = (data.organic || []).slice(0, limit).map(item => ({
+        title: item.title,
+        url: item.link,
+        snippet: item.snippet
+      }));
+
+      console.log(`🔍 [SearchService] Serper returned ${results.length} results.`);
+      return results;
+    } catch (err) {
+      console.warn("⚠️ [SearchService] Serper API request failed, falling back to DuckDuckGo:", err.message);
+    }
+  }
+
   const url = `https://html.duckduckgo.com/html/?q=${encodeURIComponent(query)}`;
   
   try {
-    console.log(`🔍 [SearchService] Searching web for: "${query}" (limit: ${limit})`);
+    console.log(`🔍 [SearchService] Searching web (DDG Scrape) for: "${query}" (limit: ${limit})`);
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
