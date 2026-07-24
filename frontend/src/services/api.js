@@ -3,9 +3,38 @@ const API_BASE_URL = import.meta.env.VITE_API_URL ||
     ? `${window.location.protocol}//${window.location.host}/api` 
     : 'http://localhost:5000/api');
 
+// Tab-isolated Token Storage Manager
+export const tokenStorage = {
+  get() {
+    if (typeof window === 'undefined') return null;
+    let token = sessionStorage.getItem('studybuddy_token');
+    if (!token) {
+      token = localStorage.getItem('studybuddy_token');
+      if (token) {
+        sessionStorage.setItem('studybuddy_token', token);
+      }
+    }
+    return token;
+  },
+  set(token) {
+    if (typeof window === 'undefined') return;
+    if (token) {
+      sessionStorage.setItem('studybuddy_token', token);
+      localStorage.setItem('studybuddy_token', token);
+    } else {
+      this.remove();
+    }
+  },
+  remove() {
+    if (typeof window === 'undefined') return;
+    sessionStorage.removeItem('studybuddy_token');
+    localStorage.removeItem('studybuddy_token');
+  }
+};
+
 // Helper to retrieve auth token
 function getAuthHeaders() {
-  const token = localStorage.getItem('studybuddy_token');
+  const token = tokenStorage.get();
   return {
     'Content-Type': 'application/json',
     ...(token ? { 'Authorization': `Bearer ${token}` } : {})
@@ -28,7 +57,7 @@ async function request(endpoint, options = {}) {
     
     if (!response.ok) {
       if (response.status === 401) {
-        localStorage.removeItem('studybuddy_token');
+        tokenStorage.remove();
         if (typeof window !== 'undefined') {
           console.warn("Session expired, invalid, or missing token. Clearing storage and reloading.");
           window.location.reload();
@@ -36,6 +65,7 @@ async function request(endpoint, options = {}) {
           return new Promise(() => {});
         }
       }
+
       const err = new Error(data.message || 'Something went wrong with the API request.');
       err.status = response.status;
       throw err;
@@ -64,7 +94,7 @@ export const api = {
       body: JSON.stringify({ email, password })
     });
     if (data.token) {
-      localStorage.setItem('studybuddy_token', data.token);
+      tokenStorage.set(data.token);
     }
     return data;
   },
@@ -75,7 +105,7 @@ export const api = {
       body: JSON.stringify(userData)
     });
     if (data.token) {
-      localStorage.setItem('studybuddy_token', data.token);
+      tokenStorage.set(data.token);
     }
     return data;
   },
@@ -92,7 +122,7 @@ export const api = {
   },
 
   logout() {
-    localStorage.removeItem('studybuddy_token');
+    tokenStorage.remove();
   },
 
   // Syllabus API
@@ -248,7 +278,7 @@ export const api = {
     for (const file of files) {
       formData.append('files', file);
     }
-    const token = localStorage.getItem('studybuddy_token');
+    const token = tokenStorage.get();
     const response = await fetch(`${API_BASE_URL}/ingest/upload`, {
       method: 'POST',
       headers: {
@@ -355,7 +385,7 @@ export const api = {
 
   // Teacher Auth & Onboarding API
   async registerTeacher(formData) {
-    const token = localStorage.getItem('studybuddy_token');
+    const token = tokenStorage.get();
     const response = await fetch(`${API_BASE_URL}/teachers/register`, {
       method: 'POST',
       headers: token ? { 'Authorization': `Bearer ${token}` } : {},

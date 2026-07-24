@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import { api } from '../services/api';
+import { api, tokenStorage } from '../services/api';
 import { useApp } from './AppContext';
 import { 
   auth, 
@@ -27,7 +27,7 @@ export const AuthProvider = ({ children }) => {
         if (firebaseUser) {
           try {
             const token = await firebaseUser.getIdToken();
-            localStorage.setItem('studybuddy_token', token);
+            tokenStorage.set(token);
             const data = await api.getMe();
             setUser(data.user);
           } catch (err) {
@@ -37,9 +37,9 @@ export const AuthProvider = ({ children }) => {
           }
         } else {
           // If logged out on Firebase, ensure we clear local bypass tokens
-          const token = localStorage.getItem('studybuddy_token');
+          const token = tokenStorage.get();
           if (token && !token.startsWith('demo_')) {
-            localStorage.removeItem('studybuddy_token');
+            tokenStorage.remove();
             setUser(null);
           }
         }
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
     } else {
       // Local Auth Mode session restoration
       async function loadLocalSession() {
-        const token = localStorage.getItem('studybuddy_token');
+        const token = tokenStorage.get();
         if (token) {
           try {
             if (token === 'demo_teacher_token_bypass') {
@@ -104,7 +104,7 @@ export const AuthProvider = ({ children }) => {
       if (isFirebaseActive) {
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
         const token = await userCredential.user.getIdToken();
-        localStorage.setItem('studybuddy_token', token);
+        tokenStorage.set(token);
         
         // Sync session details from MongoDB backend
         const data = await api.syncSession({});
@@ -147,7 +147,7 @@ export const AuthProvider = ({ children }) => {
         // Create user in Firebase Auth
         const userCredential = await createUserWithEmailAndPassword(auth, userData.email, userData.password);
         const token = await userCredential.user.getIdToken();
-        localStorage.setItem('studybuddy_token', token);
+        tokenStorage.set(token);
         
         // Sync metadata (class, school, board, etc.) to MongoDB
         const data = await api.syncSession(userData);
@@ -262,7 +262,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const data = await api.loginTeacher(email, password);
       setUser(data.user);
-      localStorage.setItem('studybuddy_token', data.token);
+      tokenStorage.set(data.token);
       triggerNotification(`🎉 Welcome back, ${data.user.name}!`);
       if (data.user.role === 'admin' || data.user.role === 'super_admin') {
         navigate('admin-dashboard');
@@ -305,7 +305,7 @@ export const AuthProvider = ({ children }) => {
         institution: 'Andhra Pradesh Model School'
       };
       setUser(demoTeacher);
-      localStorage.setItem('studybuddy_token', 'demo_teacher_token_bypass');
+      tokenStorage.set('demo_teacher_token_bypass');
       triggerNotification(`💡 Entering Developer Demo Mode as ${demoTeacher.name}!`);
       navigate('teacher-dashboard');
       return;
@@ -347,7 +347,7 @@ export const AuthProvider = ({ children }) => {
     
     setUser(demoUser);
     const mockToken = role === 'student' ? 'demo_student_token_bypass' : 'demo_parent_token_bypass';
-    localStorage.setItem('studybuddy_token', mockToken);
+    tokenStorage.set(mockToken);
     triggerNotification(`💡 Entering Developer Demo Mode as ${demoUser.name}!`);
     navigate('dashboard');
   };

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { api } from '../services/api';
+import { api, tokenStorage } from '../services/api';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
 import { Mascot } from '../components/Mascot';
@@ -1708,7 +1708,7 @@ export const AITeacher = () => {
 
   // Socket Connection for Students
   useEffect(() => {
-    const token = localStorage.getItem('studybuddy_token') || 'demo_student_token_bypass';
+    const token = tokenStorage.get() || 'demo_student_token_bypass';
     const socketUrl = import.meta.env.VITE_API_URL
       ? import.meta.env.VITE_API_URL.replace('/api', '')
       : (typeof window !== 'undefined' && (window.location.hostname !== 'localhost' || window.location.port === '5000')
@@ -2043,7 +2043,7 @@ export const AITeacher = () => {
   useEffect(() => {
     let active = true;
     const pollStatus = async () => {
-      const token = localStorage.getItem('studybuddy_token');
+      const token = tokenStorage.get();
       if (!token) return;
 
       // 1. Poll pending AI Answers

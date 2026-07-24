@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Mascot } from '../components/Mascot';
 import { useApp } from '../context/AppContext';
 import { useAuth } from '../context/AuthContext';
-import { api } from '../services/api';
+import { api, tokenStorage } from '../services/api';
 import { io } from 'socket.io-client';
 import {
   Check,
@@ -456,7 +456,7 @@ export const TeacherDashboard = ({ initialQueue = 'pending' }) => {
 
   // Socket Connection Setup
   useEffect(() => {
-    const token = localStorage.getItem('studybuddy_token') || 'demo_teacher_token_bypass';
+    const token = tokenStorage.get() || 'demo_teacher_token_bypass';
     const socketUrl = import.meta.env.VITE_API_URL
       ? import.meta.env.VITE_API_URL.replace('/api', '')
       : (typeof window !== 'undefined' && (window.location.hostname !== 'localhost' || window.location.port === '5000')

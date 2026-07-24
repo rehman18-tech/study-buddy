@@ -20,10 +20,46 @@ import { LayoutDashboard, CalendarRange, Brain, Sparkles, LineChart, ShieldCheck
 import { Mascot } from './components/Mascot';
 
 const InnerApp = () => {
-  const { user, logout } = useAuth();
+  const { user, loading, logout } = useAuth();
   const { currentPage, navigate, parentLock, setParentLock, t } = useApp();
   const [adminView, setAdminView] = useState('dashboard');
   const [showParentPin, setShowParentPin] = useState(false);
+
+  if (loading) {
+    return (
+      <div style={{
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        minHeight: '100vh',
+        backgroundColor: '#0f172a',
+        color: '#ffffff',
+        fontFamily: 'var(--font-header)'
+      }}>
+        <Mascot size={120} expression="happy" />
+        <div style={{
+          marginTop: '25px',
+          width: '45px',
+          height: '45px',
+          border: '4px solid rgba(255, 255, 255, 0.1)',
+          borderTopColor: 'var(--color-green, #10b981)',
+          borderRadius: '50%',
+          animation: 'spin-buddy 1s linear infinite'
+        }} />
+        <style dangerouslySetInnerHTML={{__html: `
+          @keyframes spin-buddy {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+          }
+        `}} />
+        <p style={{ marginTop: '20px', color: '#94a3b8', fontSize: '1.2rem', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+          Loading StudyBuddy...
+        </p>
+      </div>
+    );
+  }
+
 
   React.useEffect(() => {
     if (user) {

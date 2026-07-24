@@ -329,7 +329,11 @@ $$\\text{पानी} + \\text{कार्बन डाइऑक्साइ�
 
 चिंता न करें! मैं अभी भी आपकी समीक्षा करने में मदद कर सकता हूँ! यदि आप अभ्यास करना चाहते हैं, तो आप एक ऑफ़लाइन अभ्यास प्रश्नोत्तरी शुरू करने के लिए **"test me"** टाइप कर सकते हैं। आप अपनी उपलब्धियों को ट्रैक करने के लिए ऊपर दिए गए स्टडी प्लानर कैलेंडर या प्रोग्रेस रिपोर्ट डैशबोर्ड टैब भी देख सकते हैं!
 
-आइए मिलकर सीखते रहें! 🚀`,
+आइए मिलकर सीखते रहें! 🚀
+
+---
+💡 **डेवलपर नोट:** ऑनलाइन एआई सुविधाओं को सक्षम करने के लिए, **[Google AI Studio](https://aistudio.google.com/)** से एक मुफ्त Gemini API कुंजी प्राप्त करें और इसे अपने बैकएंड के **\`.env\`** फ़ाइल में **\`GEMINI_API_KEY\`** के रूप में कॉन्फ़िगर करें!`,
+
     explanation_planner: 'एआई प्लानर ऑफ़लाइन है। यहाँ आपके लिए एक अनुशंसित दैनिक चेकलिस्ट है!',
     planner_title: 'मानक दैनिक अध्ययन फोकस',
     planner_topic1: 'मूल अवधारणा समीक्षा',
@@ -425,7 +429,11 @@ $$\\text{నీరు} + \\text{కార్బన్ డయాక్సైడ�
 
 చింతించకండి! నేను ఇంకా మీకు సహాయం చేయగలను! మీరు ప్రాక్టీస్ చేయాలనుకుంటే, ఆఫ్‌లైన్ ప్రాక్టీస్ క్విజ్‌ను ప్రారంభించడానికి **"test me"** అని టైప్ చేయవచ్చు. మీరు మీ విజయాలను ట్రాక్ చేయడానికి పైన ఉన్న స్టడీ ప్లానర్ క్యాలెండర్ లేదా పురోగతి నివేదిక డాష్‌బోర్డ్ ట్యాబ్‌లను కూడా చూడవచ్చు!
 
-కలిసి నేర్చుకుందాం! 🚀`,
+కలిసి నేర్చుకుందాం! 🚀
+
+---
+💡 **డెవలపర్ గమనిక:** ఆన్‌లైన్ AI ఫీచర్‌లను ప్రారంభించడానికి, **[Google AI Studio](https://aistudio.google.com/)** నుండి ఉచిత Gemini API కీని పొంది, దానిని మీ బ్యాకెండ్ **\`.env\`** ఫైల్‌లో **\`GEMINI_API_KEY\`** గా కాన్ఫిగర్ చేయండి!`,
+
     explanation_planner: 'AI ప్లానర్ ఆఫ్‌లైన్‌లో ఉంది. ఇక్కడ మీ కోసం సిఫార్సు చేయబడిన రోజువారీ చెక్‌లిస్ట్ ఉంది!',
     planner_title: 'ప్రామాణిక రోజువారీ అధ్యయన ఫోకస్',
     planner_topic1: 'కోర్ కాన్సెప్ట్ రివ్యూ',
@@ -739,8 +747,85 @@ For example, if you slice a pizza into 4 equal slices and eat 1 slice, you have 
 
   // default SYLLABUS tutor response
   if (type === 'SYLLABUS') {
+    const lowerPrompt = promptText.toLowerCase().trim();
+    const isHindi = preferredLanguage === 'Hindi';
+    const isTelugu = preferredLanguage === 'Telugu';
+
+    // Conversational fallbacks
+    if (/^(hi|hello|hey|greetings|hoot|namaste|pranam|hola)(\s|$|[!.,?])/i.test(lowerPrompt)) {
+      if (isHindi) {
+        return `हूठ हूठ! 🦉 नमस्ते! मैं स्टडी बडी हूँ, आपका व्यक्तिगत एआई ट्यूटर। 
+        
+हमारा ऑनलाइन एआई सर्वर वर्तमान में ऑफ़लाइन है, लेकिन मैं अभी भी आपकी समीक्षा करने में मदद कर सकता हूँ! आप मुझसे **प्रकाश संश्लेषण (photosynthesis)**, **भिन्न (fractions)**, **गुरुत्वाकर्षण (gravity)**, **कोशिका (cells)**, या **संज्ञा (nouns)** के बारे में पूछ सकते हैं! ऑफ़लाइन अभ्यास प्रश्नोत्तरी शुरू करने के लिए आप **"test me"** भी टाइप कर सकते हैं!`;
+      } else if (isTelugu) {
+        return `హూట్ హూట్! 🦉 నమస్తే! నేను స్టడీ బడ్డీని, మీ వ్యక్తిగత AI ట్యూటర్. 
+        
+మా ఆన్‌లైన్ AI సర్వర్ ప్రస్తుతం ఆఫ్‌లైన్ లో ఉంది, కానీ నేను ఇప్పటికీ మీకు సహాయం చేయగలను! మీరు నన్ను **కిరణజన్య సంయోగక్రియ (photosynthesis)**, **భిన్నాలు (fractions)**, **గురుత్వాకర్షణ (gravity)**, **కణం (cells)**, లేదా **నామవాచకం (nouns)** గురించి అడగవచ్చు! ఆఫ్‌లైన్ క్విజ్ ప్రారంభించడానికి మీరు **"test me"** అని కూడా టైప్ చేయవచ్చు!`;
+      } else {
+        return `Hoot hoot! 🦉 Hello! I am Buddy, your AI study tutor. 
+
+Our online AI servers are currently experiencing high traffic (or offline), but I can still help you with offline topics! Try asking me about **photosynthesis**, **fractions**, **gravity**, **cells**, **nouns**, or **zygotes**! 
+
+You can also type **"test me"** to start an offline practice quiz, or click the tabs above to see your Study Planner or Progress report! 🚀`;
+      }
+    }
+
+    if (/how\s+are\s+you/i.test(lowerPrompt)) {
+      if (isHindi) {
+        return `हूठ हूठ! 🦉 मैं बहुत अच्छा हूँ! मैं यहाँ आपके अध्ययन में मदद करने के लिए तैयार हूँ। आप आज क्या पढ़ना चाहते हैं? हम **प्रकाश संश्लेषण**, **भिन्न**, **गुरुत्वाकर्षण**, **कोशिका**, या **संज्ञा** के बारे में चर्चा कर सकते हैं! 🚀`;
+      } else if (isTelugu) {
+        return `హూట్ హూట్! 🦉 నేను చాలా బాగున్నాను! మీకు సహాయం చేయడానికి సిద్ధంగా ఉన్నాను. ఈ రోజు మీరు ఏమి చదవాలనుకుంటున్నారు? మనం **కిరణజన్య సంయోగక్రియ**, **భిన్నాలు**, **గురుత్వాకర్షణ**, **కణం**, లేదా **నామవాచకం** గురించి మాట్లాడుకుందాం! 🚀`;
+      } else {
+        return `Hoot hoot! 🦉 I'm doing great! I am perched here and ready to help you learn, even though my connection to the online AI servers is currently offline. 
+
+What would you like to review today? We can talk about **photosynthesis**, **fractions**, **gravity**, **cells**, **nouns**, or **zygotes**! 🚀`;
+      }
+    }
+
+    if (/who\s+are\s+you|what\s+is\s+your\s+name/i.test(lowerPrompt)) {
+      if (isHindi) {
+        return `हूठ हूठ! 🦉 मैं स्टडी बडी हूँ, आपका एआई स्टडी पार्टनर! यद्यपि हमारे ऑनलाइन सर्वर अभी उपलब्ध नहीं हैं, मैं फिर भी आपकी मदद कर सकता हूँ। आप मुझसे **प्रकाश संश्लेषण**, **भिन्न**, या **गुरुत्वाकर्षण** के बारे में पूछ सकते हैं!`;
+      } else if (isTelugu) {
+        return `హూట్ హూట్! 🦉 నేను మీ స్టడీ బడ్డీని, మీ AI స్టడీ పార్టనర్! ఆన్‌లైన్ సర్వర్ ప్రస్తుతం అందుబాటులో లేకపోయినా, నేను మీకు సహాయం చేయగలను. మీరు నన్ను **కిరణజన్య సంయోగక్రియ**, **భిన్నాలు**, లేదా **గురుత్వాకర్షణ** గురించి అడగవచ్చు!`;
+      } else {
+        return `Hoot hoot! 🦉 I am Buddy, your personal StudyBuddy AI tutor! 
+
+Even though our online AI servers are currently experiencing high traffic, I'm still here to help you study. You can ask me about topics like **photosynthesis**, **fractions**, **gravity**, **cells**, **nouns**, or **zygotes**, or take a quiz by typing **"test me"**!`;
+      }
+    }
+
+    // Student identity check (e.g., "who is <name>" or "who am I")
+    const studentNameMatch = systemInstruction.match(/Name:\s*([^,\n]+)/i);
+    const studentName = studentNameMatch ? studentNameMatch[1].trim() : '';
+    if (studentName && (lowerPrompt.includes(studentName.toLowerCase()) || /who\s+am\s+i/i.test(lowerPrompt))) {
+      return `Hoot hoot! 🦉 **${studentName}** is YOU—our awesome StudyBuddy student! 🌟
+
+You are currently logged into StudyBuddy AI. Keep learning, completing your daily study quests, and earning XP! 🚀`;
+    }
+
+    if (/thank\s*you|thanks/i.test(lowerPrompt)) {
+      if (isHindi) {
+        return `हूठ हूठ! 🦉 आपका बहुत-बहुत धन्यवाद! मुझे आपकी मदद करके खुशी हुई। पढ़ते रहें और आगे बढ़ते रहें! 🚀`;
+      } else if (isTelugu) {
+        return `హూట్ హూట్! 🦉 మీకు చాలా ధన్యవాదాలు! సహాయం చేయడం నాకు సంతోషం. బాగా చదవండి! 🚀`;
+      } else {
+        return `Hoot hoot! 🦉 You are very welcome! I'm always happy to help you learn. Keep up the great work! 🚀`;
+      }
+    }
+
+    if (/^(bye|goodbye|see\s*you|tata|quit)(\s|$|[!.,?])/i.test(lowerPrompt)) {
+      if (isHindi) {
+        return `हूठ हूठ! 🦉 अलविदा! आपका दिन शुभ हो, और अपनी दैनिक लकीर (streak) को जीवित रखने के लिए रोजाना अध्ययन करना न भूलें! 🔥 फिर मिलेंगे!`;
+      } else if (isTelugu) {
+        return `హూట్ హూట్! 🦉 వెళ్ళివస్తాను! మీ రోజు బాగుండాలని కోరుకుంటున్నాను, మీ రోజువారీ స్ట్రీక్ కాపాడుకోవడానికి ప్రతిరోజూ చదవడం మర్చిపోవద్దు! 🔥 మళ్ళీ కలుద్దాం!`;
+      } else {
+        return `Hoot hoot! 🦉 Goodbye! Have a wonderful day, and don't forget to study a little bit every day to keep your streak flame alive! 🔥 See you soon!`;
+      }
+    }
+
     if (preferredLanguage === 'Hindi' || preferredLanguage === 'Telugu') {
       const trans = localTranslations[preferredLanguage];
+
       if (/photosynthesis/i.test(promptText)) {
         return trans.photosynthesis_response;
       }
@@ -850,7 +935,11 @@ Here is how it works in simple steps:
 
 Don't worry! I can still help you review! If you want to practice, you can type **"test me"** to start an offline practice quiz. You can also view your Study Planner calendar or check your Progress report dashboard tabs above to track your achievements!
 
-Let's keep learning together! 🚀`;
+Let's keep learning together! 🚀
+
+---
+💡 **Developer Note:** To enable online AI features, get a free Gemini API Key at **[Google AI Studio](https://aistudio.google.com/)** and configure it as **\`GEMINI_API_KEY\`** in your backend's **\`.env\`** file!`;
+
 }
 
 async function callOpenAI(systemInstruction, promptText, jsonMode = false) {
@@ -966,9 +1055,11 @@ async function callLLM(systemInstruction, promptText, jsonMode = false, throwOnE
   if (useGemini) {
     const keys = GEMINI_API_KEY.split(',').map(k => k.trim()).filter(k => k);
     const models = [
-      'gemini-1.5-flash',
+      'gemini-2.5-flash',
+      'gemini-flash-latest',
+      'gemini-flash-lite-latest',
       'gemini-2.0-flash',
-      'gemini-1.5-pro'
+      'gemini-2.0-flash-lite'
     ];
 
     for (const key of keys) {
@@ -980,12 +1071,8 @@ async function callLLM(systemInstruction, promptText, jsonMode = false, throwOnE
           succeeded = true;
           break;
         } catch (err) {
-          console.warn(`⚠️ [LLMService] Gemini (${model}) failed:`, err.message);
-          // If the error is a quota limit (429), break model loop to try the next key
-          if (err.status === 429 || (err.message && (err.message.includes('429') || err.message.includes('RESOURCE_EXHAUSTED')))) {
-            console.warn(`⚠️ [LLMService] Quota exceeded (429) for key. Trying next key if available.`);
-            break;
-          }
+          console.warn(`⚠️ [LLMService] Gemini (${model}) failed:`, err.message || err);
+          // Continue to next model if available
         }
       }
     }

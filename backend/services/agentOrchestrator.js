@@ -1235,23 +1235,46 @@ ${responseJsonSchemaPrompt}`;
                              tutorText.includes("Google Gemini AI is currently experiencing high demand") ||
                              tutorText.includes("online AI servers are currently experiencing");
 
-    if (isFallbackResponse && searchResults.length > 0) {
-      const searchList = searchResults.map((r, i) => `
-#### 🔗 [Source ${i+1}: ${r.title}](${r.url})
-> ${r.snippet}
-`).join('\n');
-      tutorText = `Hoot hoot! 🦉 **The online AI is currently offline** (rate limit reached), but StudyBuddy AI has retrieved these verified learning resources for you!
+    if (isFallbackResponse) {
+      let wikiData = null;
+      try {
+        const { fetchWikiSummary } = require('./searchService');
+        wikiData = await fetchWikiSummary(userMessage);
+      } catch (e) {
+        console.warn("⚠️ [AgentOrchestrator] Wiki summary fetch error:", e.message);
+      }
+
+      let structuredCard = '';
+
+      if (wikiData && wikiData.extract) {
+        structuredCard += `### 📌 Direct Answer (${wikiData.title})\n> ${wikiData.extract}\n\n`;
+      }
+
+      if (searchResults && searchResults.length > 0) {
+        structuredCard += `### 💡 Key Highlights & Insights\n`;
+        searchResults.forEach((r) => {
+          if (r.title && r.snippet) {
+            structuredCard += `- **${r.title}**: ${r.snippet}\n`;
+          }
+        });
+        
+        const linkList = searchResults.map((r) => `- [${r.title}](${r.url})`).join('\n');
+        structuredCard += `\n### 🔗 Verified Web Sources\n${linkList}\n`;
+      }
+
+      if (structuredCard) {
+        tutorText = `Hoot hoot! 🦉 Here is the direct answer retrieved for your question:
 
 ---
 
-### 📚 Filtered Web Resources (Class ${profile.classNum} Level)
-Here is the information filtered from the web:
-
-${searchList}
+${structuredCard}
 
 ---
 
-Don't worry, we can keep learning! If you want to practice, type **"test me"** to start an offline quiz! 🚀`;
+Don't worry, StudyBuddy is always here to help! Type **"test me"** to start a practice quiz! 🚀
+
+💡 **Developer Tip**: To enable full AI generative synthesis, get a free API key at **[Google AI Studio](https://aistudio.google.com/)** and set it as **\`GEMINI_API_KEY\`** in your \`backend/.env\` file!`;
+      }
     } else if (textbookText === '' && searchResults.length > 0 && !tutorText.includes("Web Sources") && !tutorText.includes("Web Search Results") && !tutorText.includes("Filtered Web Sources")) {
       const linkList = searchResults.map((r, i) => `\n- [${r.title}](${r.url})`).join('');
       tutorText += `\n\n### 🔍 Filtered Web Sources${linkList}`;
@@ -1687,13 +1710,17 @@ async function runOrchestrator(user, messageData) {
     }
   }
 
-  // STEP 1 & 2: Subject validation logic
+  // 1. Classify intent first (fast local regex)
+  const intent = await classifyIntent(message);
+  console.log(`[AgentOrchestrator] Intent classified: ${intent} for message: "${message}"`);
+
+  // STEP 1 & 2: Subject validation logic (only for learning/SYLLABUS questions)
   let isMismatch = false;
   let predictedSubject = '';
   let highestConfidence = 0;
   let subjectConfidences = {};
 
-  if (overrideChoice !== 'general' && overrideChoice !== 'stay' && subject && subject !== 'General') {
+  if (intent === 'SYLLABUS' && overrideChoice !== 'general' && overrideChoice !== 'stay' && subject && subject !== 'General') {
     const analysisInstruction = `You are the "StudyBuddy AI Question Analyzer Agent".
 Your task is to analyze the student's question and extract metadata.
 You must respond in a strict JSON format with exactly the following keys:
@@ -1763,10 +1790,6 @@ Ensure the response is valid JSON and contains nothing else.`;
 
   // 2. Load Syllabus Context
   const { detectedSubject, syllabusContext } = await loadSyllabusContext(profile.classNum, message);
-
-  // 3. Classify intent
-  const intent = await classifyIntent(message);
-  console.log(`[AgentOrchestrator] Intent classified: ${intent} for message: "${message}"`);
 
   // 4. Run correct sub-agent
   try {

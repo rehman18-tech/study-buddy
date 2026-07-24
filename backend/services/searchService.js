@@ -98,6 +98,47 @@ async function searchWeb(query, limit = 3) {
   }
 }
 
+/**
+ * Fetch direct summary & facts from Wikipedia REST API
+ * @param {string} query 
+ * @returns {Promise<{title: string, extract: string, description: string, url: string} | null>}
+ */
+async function fetchWikiSummary(query) {
+  if (!query || !query.trim()) return null;
+  try {
+    const cleanQuery = query.replace(/^(what|who|where|when|why|how|is|are|can|could|tell me about|explain|define)\s+/i, '').trim();
+    const searchUrl = `https://en.wikipedia.org/w/api.php?action=query&list=search&srsearch=${encodeURIComponent(cleanQuery)}&format=json&origin=*`;
+    const searchRes = await fetch(searchUrl, {
+      headers: { 'User-Agent': 'StudyBuddyEducationalApp/1.0' }
+    });
+    if (!searchRes.ok) return null;
+    const searchData = await searchRes.json();
+    const firstHit = searchData?.query?.search?.[0];
+    if (firstHit && firstHit.title) {
+      const summaryUrl = `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(firstHit.title)}`;
+      const summaryRes = await fetch(summaryUrl, {
+        headers: { 'User-Agent': 'StudyBuddyEducationalApp/1.0' }
+      });
+      if (summaryRes.ok) {
+        const summaryData = await summaryRes.json();
+        if (summaryData && summaryData.extract) {
+          return {
+            title: summaryData.title,
+            extract: summaryData.extract,
+            description: summaryData.description || '',
+            url: summaryData.content_urls?.desktop?.page || `https://en.wikipedia.org/wiki/${encodeURIComponent(firstHit.title)}`
+          };
+        }
+      }
+    }
+  } catch (err) {
+    console.warn("⚠️ [SearchService] Wikipedia summary fetch failed:", err.message);
+  }
+  return null;
+}
+
 module.exports = {
-  searchWeb
+  searchWeb,
+  fetchWikiSummary
 };
+
