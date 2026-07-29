@@ -25,6 +25,22 @@ const InnerApp = () => {
   const [adminView, setAdminView] = useState('dashboard');
   const [showParentPin, setShowParentPin] = useState(false);
 
+  React.useEffect(() => {
+    if (loading) return;
+    if (user) {
+      const studentPages = ['dashboard', 'planner', 'quizzes', 'ai-teacher', 'progress', 'parent-dashboard', 'settings'];
+      if (user.role === 'student' || user.role === 'parent') {
+        if (!studentPages.includes(currentPage)) {
+          navigate('dashboard');
+        }
+      }
+    } else {
+      if (currentPage !== 'landing' && currentPage !== 'auth') {
+        navigate('landing');
+      }
+    }
+  }, [user, currentPage, loading]);
+
   if (loading) {
     return (
       <div style={{
@@ -59,22 +75,6 @@ const InnerApp = () => {
       </div>
     );
   }
-
-
-  React.useEffect(() => {
-    if (user) {
-      const studentPages = ['dashboard', 'planner', 'quizzes', 'ai-teacher', 'progress', 'parent-dashboard', 'settings'];
-      if (user.role === 'student' || user.role === 'parent') {
-        if (!studentPages.includes(currentPage)) {
-          navigate('dashboard');
-        }
-      }
-    } else {
-      if (currentPage !== 'landing' && currentPage !== 'auth') {
-        navigate('landing');
-      }
-    }
-  }, [user, currentPage]);
 
   // 1. Full Screen Lockout Panel for Parent Lock limits
   if (parentLock) {
