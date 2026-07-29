@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "description": "StudyBuddy Full-Stack Educational Application",
   "scripts": {
+    "build": "npm --prefix frontend run build",
+    "start": "node backend/server.js",
     "install-all": "npm install --production=false --legacy-peer-deps && npm --prefix backend install --legacy-peer-deps && npm --prefix frontend install --production=false --legacy-peer-deps",
     "start-backend": "npm --prefix backend run dev",
     "start-frontend": "npm --prefix frontend run dev",

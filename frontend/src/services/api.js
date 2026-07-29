@@ -53,17 +53,22 @@ async function request(endpoint, options = {}) {
 
   try {
     const response = await fetch(url, config);
-    const data = await response.json();
+    
+    let data;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      data = { message: text || response.statusText };
+    }
     
     if (!response.ok) {
       if (response.status === 401) {
         tokenStorage.remove();
-        if (typeof window !== 'undefined') {
-          console.warn("Session expired, invalid, or missing token. Clearing storage and reloading.");
-          window.location.reload();
-          // Return a pending promise to block execution and prevent error alerts
-          return new Promise(() => {});
-        }
+        const err = new Error(data.message || 'Session expired or invalid. Please sign in again.');
+        err.status = 401;
+        throw err;
       }
 
       const err = new Error(data.message || 'Something went wrong with the API request.');

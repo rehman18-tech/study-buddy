@@ -63,31 +63,74 @@ export const AuthProvider = ({ children }) => {
                 institution: 'Andhra Pradesh Model School'
               });
               navigate('teacher-dashboard');
+            } else if (token === 'demo_student_token_bypass') {
+              setUser({
+                _id: 'demo_user_123',
+                name: 'MD. IBADUR REHMAN',
+                email: 'alex@studybuddy.com',
+                role: 'student',
+                studentProfile: {
+                  class: 5,
+                  schoolName: 'Zilla Parishad High School',
+                  schoolType: 'Public',
+                  board: 'SSC',
+                  preferredLanguage: 'English',
+                  parentContact: '9988776655',
+                  parentPin: '5555',
+                  streak: 2,
+                  lastActiveDate: new Date().toDateString(),
+                  xp: 120,
+                  coins: 40,
+                  achievementLevel: 2,
+                  badges: ['streak_3']
+                }
+              });
+              navigate('dashboard');
+            } else if (token === 'demo_parent_token_bypass') {
+              setUser({
+                _id: 'demo_parent_123',
+                name: 'Parent of Alex',
+                email: 'parent@studybuddy.com',
+                role: 'parent',
+                parentProfile: {
+                  childEmails: ['alex@studybuddy.com'],
+                  customQuests: [],
+                  rewards: []
+                }
+              });
+              navigate('dashboard');
             } else {
               let data;
               try {
                 data = await api.getMe();
                 setUser(data.user);
-                if (data.user.role === 'admin' || data.user.role === 'super_admin') {
+                if (data.user?.role === 'admin' || data.user?.role === 'super_admin') {
                   navigate('admin-dashboard');
-                } else if (data.user.role === 'teacher') {
+                } else if (data.user?.role === 'teacher') {
                   navigate('teacher-dashboard');
                 } else {
                   navigate('dashboard');
                 }
               } catch (studentErr) {
-                data = await api.getTeacherMe();
-                setUser(data.user);
-                if (data.user.role === 'admin' || data.user.role === 'super_admin') {
-                  navigate('admin-dashboard');
-                } else {
-                  navigate('teacher-dashboard');
+                try {
+                  data = await api.getTeacherMe();
+                  setUser(data.user);
+                  if (data.user?.role === 'admin' || data.user?.role === 'super_admin') {
+                    navigate('admin-dashboard');
+                  } else {
+                    navigate('teacher-dashboard');
+                  }
+                } catch (teacherErr) {
+                  console.warn("Local session validation failed, resetting auth state:", teacherErr);
+                  api.logout();
+                  setUser(null);
                 }
               }
             }
           } catch (err) {
-            console.error("Local auth session load failed:", err);
+            console.warn("Local auth session load failed:", err);
             api.logout();
+            setUser(null);
           }
         }
         setLoading(false);
