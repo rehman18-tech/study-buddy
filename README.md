@@ -10,7 +10,7 @@ The application engages students using 3D button clicks, daily streak flame trac
 
 1. **Student Profiles**: Dynamic sign-up logging the student's Name, Class/Grade (1 to 10), Board (CBSE, ICSE, State Board), and School Type.
 2. **Today's Quest Planner**: Dynamically generates difficulty-appropriate daily checklists customized to the student's grade level.
-3. **Duolingo Course Path Map**: Visual, winding zig-zag course pathway nodes. Clicking an unlocked chapter lets students challenge standard quizzes!
+3. **Course Path Map**: Visual, winding zig-zag course pathway nodes. Clicking an unlocked chapter lets students challenge standard quizzes!
 4. **Motivational Streak Flames**: A daily streak counter showing an animated fire flame, celebrating consistent study habits.
 5. **Tactile Study Timer**: Custom built-in focus clock rewarding students with **+50 XP** once they complete study sessions.
 6. **AI Teacher Chat (Buddy)**: Interactive educational AI chatbot. Buddy floats on the screen, changing his animated visual expressions (`thinking`, `happy`, `celebrate`, `confused`) based on student questions!
