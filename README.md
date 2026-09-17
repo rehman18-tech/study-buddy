@@ -2,7 +2,7 @@
 
 StudyBuddy is a modern, responsive educational web application designed for students from Class 1 to Class 10 to develop powerful, consistent daily study habits. 
 
-Featuring visual, gamified mechanics inspired by **Duolingo** and **Khan Academy**, the application engages students using 3D button clicks, daily streak flame trackers, study quests, interactive multiple-choice quizzes, a secure Parents' portal, and **Buddy the Owl**—a responsive AI Tutor mascot!
+The application engages students using 3D button clicks, daily streak flame trackers, study quests, interactive multiple-choice quizzes, a secure Parents' portal, and **Buddy the Owl**—a responsive AI Tutor mascot!
 
 ---
 
@@ -42,25 +42,4 @@ To provide the absolute best developer experience, StudyBuddy includes built-in 
 
 ---
 
-## ⚙️ How to Install and Run
-
-The repository is structured as an easy-to-use monorepo. Follow these quick steps to launch the app:
-
-### 1. Install All Dependencies
-Run this single command in your main root workspace directory (`c:\Users\ibadu\Desktop\school`). It will install all required npm packages for the root, backend, and frontend concurrently:
-```bash
-npm run install-all
-```
-
-### 2. Launch the Application
-Start both the Express backend server (port 5000) and the Vite frontend dev server (port 5173) concurrently under a single hot-reloaded terminal window:
-```bash
-npm run dev
-```
-
-### 3. Open in Browser
-Once launched, navigate to the local link:
-👉 **[http://localhost:5173](http://localhost:5173)**
-
----
 *Built with ❤️ for gamified childhood education.*
