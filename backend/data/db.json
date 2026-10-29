@@ -4,7 +4,7 @@
       "_id": "bc72f6f3-53d5-4f5c-ae16-307494b1e65d",
       "name": "System Admin",
       "email": "mdibadurrehman1865@gmail.com",
-      "password": "$2a$10$Nvlkx2qj6q3ajGW71ujRbe23w85vGrosITvrWdqWeDHV5j26gDUia",
+      "password": "$2a$10$Ml/KbTnYCeV.bMcn2zJmYO0RQiili3iItzDvjVC94GG0GlNvLMwGm",
       "phone": "+919988776655",
       "country": "India",
       "qualification": "System Administrator",
@@ -51,6 +51,30 @@
       },
       "createdAt": "2026-07-24T14:40:27.954Z",
       "updatedAt": "2026-07-24T14:40:28.061Z"
+    },
+    {
+      "_id": "79f26072-806a-4afa-973b-442d1bf0d0c9",
+      "name": "md rehman",
+      "email": "ibadurrahman9123@gmail.com",
+      "password": "$2a$10$PAtJa4sNEBaLp9xDp5H/We9Kh0Yf0qJI3OPn3T4qGAZHiWjTHk4Fu",
+      "role": "student",
+      "studentProfile": {
+        "class": 6,
+        "schoolName": "kk ",
+        "schoolType": "Public",
+        "board": "SSC",
+        "preferredLanguage": "English",
+        "parentContact": "kklk",
+        "parentPin": "1234",
+        "streak": 0,
+        "lastActiveDate": "",
+        "xp": 0,
+        "coins": 0,
+        "achievementLevel": 1,
+        "badges": []
+      },
+      "createdAt": "2026-10-29T14:23:12.000Z",
+      "updatedAt": "2026-10-29T14:23:12.131Z"
     }
   ],
   "quizzes": [
@@ -12567,10 +12591,106 @@
       "updatedAt": "2026-07-24T14:40:28.061Z",
       "_id": "28322c8a-3fbb-4d29-9d8f-d66da2ef9640",
       "createdAt": "2026-07-24T14:40:28.061Z"
+    },
+    {
+      "userId": "79f26072-806a-4afa-973b-442d1bf0d0c9",
+      "name": "md rehman",
+      "classNum": 6,
+      "schoolName": "",
+      "schoolType": "Public",
+      "board": "SSC",
+      "preferredLanguage": "English",
+      "learningGoals": [],
+      "weakSubjects": [],
+      "strongSubjects": [],
+      "streak": 0,
+      "xp": 0,
+      "coins": 0,
+      "studyTime": 0,
+      "updatedAt": "2026-10-29T14:23:12.131Z",
+      "_id": "f9bc712b-628d-4988-87c5-ba8472eb2642",
+      "createdAt": "2026-10-29T14:23:12.131Z"
     }
   ],
   "exams": [],
-  "studyPlans": [],
+  "studyPlans": [
+    {
+      "_id": "2558f2b3-3d1a-4459-b0ec-b70ee98d52e4",
+      "userId": "79f26072-806a-4afa-973b-442d1bf0d0c9",
+      "planType": "daily",
+      "planData": {
+        "title": "Your Daily Learning Adventure!",
+        "tasks": [
+          {
+            "subject": "Mathematics",
+            "topic": "Fractions - Understanding and Basic Operations",
+            "duration": "25 mins",
+            "priority": "high"
+          },
+          {
+            "subject": "Science",
+            "topic": "Components of Food - Reading and Key Concepts",
+            "duration": "25 mins",
+            "priority": "high"
+          },
+          {
+            "subject": "English",
+            "topic": "Who Did Patrick's Homework? - Read Chapter and Vocabulary",
+            "duration": "20 mins",
+            "priority": "medium"
+          },
+          {
+            "subject": "Social Studies",
+            "topic": "The Earth in the Solar System - Quick Review of Planets",
+            "duration": "15 mins",
+            "priority": "low"
+          }
+        ]
+      },
+      "date": "2026-10-29T14:23:22.640Z"
+    },
+    {
+      "_id": "36f21fdc-e7b8-4381-aed5-5c0b8fe238b6",
+      "userId": "79f26072-806a-4afa-973b-442d1bf0d0c9",
+      "planType": "daily",
+      "planData": {
+        "title": "Your Daily Learning Adventure!",
+        "tasks": [
+          {
+            "subject": "Mathematics",
+            "topic": "Fractions - Understanding Basic Concepts and Types",
+            "duration": "25 mins",
+            "priority": "high"
+          },
+          {
+            "subject": "English",
+            "topic": "Reading and Comprehension: 'Who Did Patrick's Homework?'",
+            "duration": "20 mins",
+            "priority": "medium"
+          },
+          {
+            "subject": "Science",
+            "topic": "Components of Food - Identifying Different Nutrients",
+            "duration": "20 mins",
+            "priority": "medium"
+          },
+          {
+            "subject": "Social Studies",
+            "topic": "Understanding Diversity - What makes us unique?",
+            "duration": "15 mins",
+            "priority": "low"
+          },
+          {
+            "subject": "General",
+            "topic": "Quick Review: Recall key points from today's subjects",
+            "duration": "10 mins",
+            "priority": "low"
+          }
+        ]
+      },
+      "date": "2026-10-29T14:23:29.731Z"
+    }
+  ],
   "quizResults": [],
   "achievements": [],
   "teachers": [],
@@ -12784,6 +12904,16 @@
   "studentMemories": [
     {
       "userId": "8e5f0ec0-a56c-4aea-b7c5-fa16513be450",
+      "weakChapters": [],
+      "strongChapters": [],
+      "previousMistakes": [],
+      "completedChapters": [],
+      "quizHistory": [],
+      "revisionHistory": [],
+      "learningSpeed": "Average"
+    },
+    {
+      "userId": "79f26072-806a-4afa-973b-442d1bf0d0c9",
       "weakChapters": [],
       "strongChapters": [],
       "previousMistakes": [],
