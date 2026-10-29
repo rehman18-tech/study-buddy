@@ -459,8 +459,8 @@ export const TeacherDashboard = ({ initialQueue = 'pending' }) => {
     const token = tokenStorage.get() || 'demo_teacher_token_bypass';
     const socketUrl = import.meta.env.VITE_API_URL
       ? import.meta.env.VITE_API_URL.replace('/api', '')
-      : (typeof window !== 'undefined' && (window.location.hostname !== 'localhost' || window.location.port === '5000')
-          ? `${window.location.protocol}//${window.location.host}`
+      : (typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+          ? 'https://study-buddy-v27e.onrender.com'
           : 'http://localhost:5000');
     
     const s = io(socketUrl, {
